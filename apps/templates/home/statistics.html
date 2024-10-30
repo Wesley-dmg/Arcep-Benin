@@ -1,0 +1,191 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Statistiques
+{% endblock %}
+
+{% block content %}
+   <div class="header bg-primary ">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="#"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                  <a href="#">Sites</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Statistiques</li>
+              </ol>
+            </nav>
+          </div>
+          <div class="col-lg-6 col-5 text-right">
+            <a href="{% url 'home:site_create' %}" class="btn btn-sm btn-neutral">Ajouter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container mt-5">
+    <h2>Statistiques</h2>
+
+    <!-- Grille pour organiser le formulaire, le résumé des statistiques et le graphique -->
+    <div class="row">
+      <!-- Formulaire et statistiques côte à côte -->
+      <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <!-- Formulaire pour filtrer les statistiques -->
+        <form id="stats-form" class="form-inline">
+          <div class="form-group mr-3">
+            <label for="date_from" class="mr-2">Date de début</label>
+            <input type="date" id="date_from" name="date_from" class="form-control" />
+          </div>
+          <div class="form-group mr-3">
+            <label for="date_to" class="mr-2">Date de fin</label>
+            <input type="date" id="date_to" name="date_to" class="form-control" />
+          </div>
+          <div class="form-group mr-3">
+            <label for="operateur" class="mr-2">Opérateur</label>
+            <select id="operateur" name="operateur" class="form-control">
+              <option value="">Tous</option>
+              {% for operateur in operateurs %}
+                <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group mr-3">
+            <label for="conformite" class="mr-2">Conformité</label>
+            <select id="conformite" name="conformite" class="form-control">
+              <option value="">Tous</option>
+              <option value="conforme">Conforme</option>
+              <option value="non_conforme">Non conforme</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="fetch-stats">Appliquer</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Résumé des statistiques et graphique côte à côte -->
+    <div class="row mt-5">
+      <!-- Colonne pour le résumé des statistiques -->
+      <div class="col-md-6">
+        <div>
+          <h3>Résumé</h3>
+          <p>Nombre total de sites : <span id="sites-count"></span></p>
+          <p>Nombre total d'opérateurs : <span id="operateurs-count"></span></p>
+          <p>Nombre de sites conformes : <span id="conformes-count"></span></p>
+          <p>Nombre de sites non conformes : <span id="non-conformes-count"></span></p>
+        </div>
+      </div>
+
+      <!-- Colonne pour le graphique -->
+      <div class="col-md-6">
+        <canvas id="stats-chart" height="300"></canvas>
+      </div>
+    </div>
+
+    <!-- Indicateur de chargement -->
+    <div id="loading-indicator" style="display:none;" class="text-center mt-3">
+      <img src="/static/images/loading.gif" alt="Chargement..." />
+    </div>
+  </div>
+
+  <!-- Inclusion de Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.getElementById('fetch-stats').addEventListener('click', function () {
+      const dateFrom = document.getElementById('date_from').value
+      const dateTo = document.getElementById('date_to').value
+      const operateur = document.getElementById('operateur').value
+      const conformite = document.getElementById('conformite').value
+    
+      const url = `{% url 'home:get_statistics_data' %}?date_from=${dateFrom}&date_to=${dateTo}&operateur=${operateur}&conformite=${conformite}`
+    
+      // Afficher l'indicateur de chargement
+      document.getElementById('loading-indicator').style.display = 'block'
+    
+      // Requête fetch pour obtenir les données
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          // Met à jour les éléments HTML avec les données reçues
+          document.getElementById('sites-count').innerText = data.sites_count
+          document.getElementById('operateurs-count').innerText = data.operateurs_count
+          document.getElementById('conformes-count').innerText = data.conformes_count
+          document.getElementById('non-conformes-count').innerText = data.non_conformes_count
+    
+          // Met à jour le graphique avec les nouvelles données
+          updateChart(data)
+    
+          // Masquer l'indicateur de chargement
+          document.getElementById('loading-indicator').style.display = 'none'
+        })
+        .catch((error) => {
+          console.error('Erreur lors de la récupération des données:', error)
+          alert('Une erreur est survenue lors de la récupération des statistiques. Veuillez réessayer plus tard.')
+    
+          // Masquer l'indicateur de chargement en cas d'erreur
+          document.getElementById('loading-indicator').style.display = 'none'
+        })
+    })
+    
+    // Fonction pour mettre à jour le graphique
+    function updateChart(data) {
+      const ctx = document.getElementById('stats-chart').getContext('2d')
+      if (window.statsChart) {
+        window.statsChart.data.datasets[0].data = [data.sites_count, data.conformes_count, data.non_conformes_count, data.operateurs_count]
+        window.statsChart.update()
+      } else {
+        window.statsChart = new Chart(ctx, {
+          type: 'doughnut', // Type de graphique
+          data: {
+            labels: ['Sites', 'Sites Conformes', 'Sites Non Conformes', 'Opérateurs'],
+            datasets: [
+              {
+                label: 'Statistiques',
+                data: [data.sites_count, data.conformes_count, data.non_conformes_count, data.operateurs_count],
+                backgroundColor: [
+                    'rgba(255, 205, 86, 0.6)',  // Soft yellow
+                    'rgba(75, 192, 192, 0.6)',  // Soft teal
+                    'rgba(153, 102, 255, 0.6)', // Soft purple
+                    'rgba(201, 203, 207, 0.6)'  // Light grey
+                ],
+                borderColor: [
+                    'rgba(255, 205, 86, 1)',    // Yellow border
+                    'rgba(75, 192, 192, 1)',    // Teal border
+                    'rgba(153, 102, 255, 1)',   // Purple border
+                    'rgba(201, 203, 207, 1)'    // Grey border
+                ],
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  font: {
+                    size: 16
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `${context.label}: ${context.raw}`
+                  }
+                }
+              }
+            }
+          }
+        })
+      }
+    }
+  </script>
+{% endblock %}

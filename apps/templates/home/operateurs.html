@@ -1,0 +1,95 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Listes Operateurs
+{% endblock %}
+
+{% block content %}
+  <div class="header bg-primary pb-6">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="#"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                  <a href="#">Operateurs</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Tous</li>
+              </ol>
+            </nav>
+          </div>
+          <div class="col-lg-6 col-5 text-right">
+            <a href="{% url 'home:operateur_create' %}" class="btn btn-sm btn-neutral">Ajouter</a>
+            {% comment %} <a href="#" class="btn btn-sm btn-neutral">Filtres</a> {% endcomment %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <!-- Card header -->
+
+          <!-- Light table -->
+          {% if messages %}
+            <div class="alert-messages">
+              {% for message in messages %}
+                <div class="alert {% if message.tags %}
+                    alert-{{ message.tags }}
+                  {% endif %}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="table-responsive">
+            <table class="table align-items-center table-flush">
+              <thead class="thead-light">
+                <tr>
+                  <th class="sort text-center">Operateurs</th>
+                  <th class="sort text-center">Nombre de sites</th>
+                  <th class="text-center">Sites conforme</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="list">
+                {% for operateur in operateurs %}
+                  <tr>
+                    <td scope="row " class="text-center">
+                      <div class="media align-items-center justify-content-center">
+                        {% comment %} <img alt="{{ operateur.nom }}" src="/static/assets/img/media/{{ operateur.logo }}" width="18%" class="mr-3" /> {% endcomment %}
+                        <span>{{ operateur.nom }}</span>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ operateur.total_sites }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ operateur.conforming_sites|default:0 }}</span>
+                    </td>
+                    <td class="text-center">
+                      <a href="{% url 'home:operateur_update' operateur.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                      <a href="{% url 'home:operateur_delete' operateur.id %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+
+{% endblock %}

@@ -1,0 +1,53 @@
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="/static/assets/js/argon.js?v=1.2.0"></script>
+<script src="/static/assets/vendor/jquery/dist/jquery.min.js"></script>
+<script src="/static/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/assets/vendor/js-cookie/js.cookie.js"></script>
+<script src="/static/assets/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
+<script src="/static/assets/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
+<script src="/static/assets/js/argon.js?v=1.2.0"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      var alertMessages = document.querySelectorAll('.alert-messages .alert')
+      alertMessages.forEach(function (alert) {
+        alert.style.display = 'none'
+      })
+    }, 1500) 
+  })
+    {% if comunes %}
+    
+  
+   
+  //Script JavaScript pour la mise à jour dynamique des communes 
+   const communesByDepartement = 
+    {
+      {% for departement, communes in communes.items %}
+        '{{ departement }}': [
+          {% for commune, commune_display in communes %}
+            { 'value': '{{ commune }}', 'display': '{{ commune_display }}' },
+          {% endfor %}
+        ],
+      {% endfor %}
+    };
+
+    document.getElementById('id_departement').addEventListener('change', function() {
+      const departement = this.value;
+      const communesSelect = document.getElementById('id_commune');
+
+      // Vider les options actuelles
+      while (communesSelect.options.length > 1) {
+        communesSelect.remove(1);
+      }
+
+      if (departement in communesByDepartement) {
+        const communes = communesByDepartement[departement];
+        communes.forEach(commune => {
+          const option = new Option(commune.display, commune.value);
+          communesSelect.add(option);
+        });
+      }
+    });
+
+    {% endif %}
+  </script>

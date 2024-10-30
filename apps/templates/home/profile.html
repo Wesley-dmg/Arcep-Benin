@@ -1,0 +1,73 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Profile{% endblock title %}
+
+{% block content %}
+<div class="container h-100 d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+  <div class="card col-lg-6 col-md-8">
+    <div class="card-body text-center">
+      <div class="profile-header">
+        <img src="/static/assets/img/theme/team-4.jpg" class="rounded-circle mb-3" style="width: 150px; height: 150px;">
+        <h3 class="card-title">{{ request.user.username }}</h3>
+        <p class="card-text">{{ request.user.email }}</p>
+      </div>
+      <button class="btn btn-primary mt-3" data-toggle="modal" data-target="#editProfileModal">Éditer le profil</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for editing profile -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProfileModalLabel">Modifier le profil</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Formulaire d'édition de profil -->
+        <form method="POST" action="{% url 'authentication:profile' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="first_name">Prénom</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ request.user.first_name }}">
+          </div>
+          <div class="form-group">
+            <label for="last_name">Nom</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ request.user.last_name }}">
+          </div>
+          <div class="form-group">
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ request.user.username }}">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ request.user.email }}">
+          </div>
+          <div class="form-group">
+            <label for="password">Changer le mot de passe</label>
+            <input type="password" class="form-control" id="password" name="password">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Sauvegarder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+<!-- Specific JS -->
+{% block javascripts %}
+<script>
+  $(document).ready(function() {
+    $('#editProfileModal').on('shown.bs.modal', function () {
+      $('#editProfileModal').trigger('focus')
+    });
+  });
+</script>
+{% endblock javascripts %}

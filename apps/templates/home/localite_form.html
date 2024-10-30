@@ -1,0 +1,141 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Ajouter une localité
+{% endblock %}
+{% block stylesheets %}
+
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row">
+      <!-- Formulaire à gauche -->
+      <div class="col-md-5">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Ajouter une localité</h3>
+          </div>
+
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+
+              <div class="form-group">
+                <label for="id_departement">Département</label>
+                <select id="id_departement" name="departement" class="form-control" required>
+                  <option value="">Sélectionner un département</option>
+                  {% for departement in departements %}
+                    <option value="{{ departement.id }}">{{ departement.nom }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="id_commune">Commune</label>
+                <select id="id_commune" name="commune" class="form-control select2" required>
+                  <option value="">Sélectionner une commune</option>
+                </select>
+              </div>
+
+              <!-- Localité -->
+              <div class="form-group">
+                <label for="id_localite">Localité</label>
+                <input type="text" id="id_localite" name="localite" class="form-control" placeholder="Localité" required />
+              </div>
+
+              <!-- Bouton de soumission -->
+              <div class="form-group">
+                <a href="{% url 'home:localite_create' %}" class="btn btn-secondary">Annuler</a>
+                <input type="submit" class="btn btn-primary" value="Enregistrer" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste des localités à droite -->
+      <div class="col-md-7">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Liste des localités</h3>
+            <!-- Barre de recherche -->
+            <form method="get" class="form-inline">
+              <input type="text" name="q" id="searchBar" class="form-control" placeholder="Rechercher une localité, commune, ou département" value="{{ query }}" style="max-width: 200px;" autocomplete="off" />
+              <button type="submit" class="btn btn-primary ml-2">Rechercher</button>
+            </form>
+          </div>
+          <div class="card-body overflow-auto custom-scrollbar" style="max-height: 400px;">
+            <ul class="list-group" id="localiteList">
+              {% for localite in localites %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ localite.localite|upper }}</strong> - {{ localite.commune }} - {{ localite.commune.departement }}
+                  </div>
+                  <div>
+                    <a href="{% url 'home:localite_update' localite.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                    <a href="{% url 'home:localite_delete' localite.id %}" class="btn btn-sm btn-outline-danger">Supprimer</a>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('#id_departement').on('change', function () {
+        var departementId = $(this).val();
+        if (departementId) {
+          $.ajax({
+            url: "{% url 'home:get_communes' %}",
+            data: {
+              departement_id: departementId
+            },
+            success: function (data) {
+              var communeSelect = $('#id_commune');
+              communeSelect.empty();
+              communeSelect.append('<option value="">Sélectionner une commune</option>');
+              data.forEach(function (commune) {
+                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
+              });
+            }
+          });
+        } else {
+          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
+        }
+      });
+    });
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      $('#searchBar').on('input', function () {
+        var query = $(this).val()
+        $.ajax({
+          url: "{% url 'home:localite_create' %}",
+          data: {
+            q: query
+          },
+          success: function (data) {
+            var localiteList = $('#localiteList')
+            localiteList.empty()
+            if (data.length > 0) {
+              data.forEach(function (item) {
+                localiteList.append('<li class="list-group-item d-flex justify-content-between align-items-center">' + '<div><strong>' + item.localite.toUpperCase() + '</strong> - ' + item.commune + ' - ' + item.departement + '</div>' + '<div>' + '<a href="/localite/update/' + item.id + '" class="btn btn-sm btn-ouprimary">Modifier</a> ' + '<a href="/localite/delete/' + item.id + '" class="btn btn-sm btn-oudanger">Supprimer</a>' + '</div></li>')
+              })
+            } else {
+              localiteList.append('<li class="list-group-item">Aucun résultat trouvé</li>')
+            }
+          }
+        })
+      })
+    })
+  </script>
+{% endblock %}

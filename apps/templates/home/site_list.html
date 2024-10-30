@@ -1,0 +1,275 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Listes des Sites
+{% endblock %}
+
+{% block content %}
+  <div class="header bg-primary pb-6">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="#"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                  <a href="#">Sites</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Tous</li>
+              </ol>
+            </nav>
+          </div>
+          <div class="col-lg-6 col-5 text-right">
+            <a href="{% url 'home:site_create' %}" class="btn btn-sm btn-neutral">Ajouter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Sites</h3>
+            <select id="entries-count" class="form-control form-control-sm w-auto">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+            </select>
+          </div>
+
+          {% if messages %}
+            <div class="alert-messages">
+              {% for message in messages %}
+                <div class="alert {% if message.tags %}
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    alert-{{ message.tags }}
+                  {% endif %}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="table-responsive">
+            <table id="sitesTable" class="table align-items-center table-flush">
+              <thead class="thead-light">
+                <tr>
+                  <th>
+                    <input type="checkbox" id="select-all" />
+                  </th>
+                  <th scope="col" class="sort text-center">Nom</th>
+                  <th scope="col" class="sort text-center">Opérateur</th>
+                  <th scope="col" class="sort text-center">Localité</th>
+                  <th scope="col" class="sort text-center">Emplacement</th>
+                  <th scope="col" class="sort text-center">Conformité</th>
+                  {% comment %} <th scope="col" class="sort text-center">Rapport CEM</th> {% endcomment %}
+                  <th scope="col" class="sort text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="list">
+                {% for item in sites %}
+                  <tr>
+                    <td class="text-center">
+                      <input type="checkbox" class="select-item" value="{{ item.site.id }}" />
+                    </td>
+                    <td scope="row" class="text-center">
+                      <span>{{ item.site.nom }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ item.site.operateur.nom }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ item.site.localite.localite }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ item.site.emplacement.type_emplacement }}</span>
+                    </td>
+
+                    <td class="d-flex justify-content-center">
+                      {% if item.has_conformite %}
+                        {% if item.site.conformite.statut %}
+                          <span class="badge d-block w-75 badge-success text-center">Conforme</span>
+                        {% else %}
+                          <span class="badge d-block w-auto badge-danger text-center">Non Conforme</span>  
+                        {% endif %}
+                        {% else %}
+                        <span class="badge badge-warning d-block w-75 text-center">N/A</span>
+                      {% endif %}
+                    </td>
+                    
+                    <td class="text-center">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="actionsDropdown{{ item.site.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v"></i> <!-- Icône pour le dropdown --></button>
+                        <div class="dropdown-menu" aria-labelledby="actionsDropdown{{ item.site.id }}">
+                          <a class="dropdown-item" href="{% url 'home:site_detail' item.site.id %}"><i class="fas fa-eye"></i> Voir</a>
+                          <a class="dropdown-item" href="{% url 'home:site_update' item.site.id %}"><i class="fas fa-edit"></i> Modifier site</a>
+                          {% if item.has_conformite %}
+                            <a class="dropdown-item" href="{% url 'home:update_conformite' item.site.id %}"><i class="fas fa-edit"></i> Éditer conformité</a>
+                          {% else %}
+                            <a class="dropdown-item" href="{% url 'home:add_conformite' item.site.id %}"><i class="fas fa-clipboard-check"></i> Ajouter une conformité</a>
+                          {% endif %}
+
+                          <div class="dropdown-divider"></div>
+                          <a class="dropdown-item text-danger" href="{% url 'home:site_delete' item.site.id %}"><i class="fas fa-trash-alt"></i> Supprimer</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- Bouton de suppression -->
+
+          <div class="card-footer text-right">
+            <button id="delete-selected" class="btn btn-danger btn-sm" disabled data-toggle="modal" data-target="#confirmDeleteModal">Supprimer sélection</button>
+          </div>
+
+          <!-- Modal de confirmation -->
+          <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="confirmDeleteLabel">Confirmer la suppression</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">Êtes-vous sûr de vouloir supprimer les sites sélectionnés ? Cette action est irréversible.</div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-danger" id="confirmDeleteButton">Supprimer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  <!-- jQuery JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      // Initialize DataTable
+      var table = $('#sitesTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        pageLength: 10,
+        lengthMenu: [10, 20, 30, 40],
+        columnDefs: [{ orderable: false, targets: [0, 5] }],
+        language: {
+          paginate: {
+            next: '<i class="fas fa-chevron-right"></i>',
+            previous: '<i class="fas fa-chevron-left"></i>'
+          },
+          lengthMenu: 'Afficher _MENU_ entrées',
+          search: 'Rechercher:',
+          zeroRecords: 'Aucun enregistrement trouvé',
+          info: 'Affichage de _START_ à _END_ sur _TOTAL_ entrées',
+          infoEmpty: 'Aucune donnée disponible',
+          infoFiltered: '(filtré de _MAX_ entrées au total)'
+        }
+      })
+    
+      // Handle select all checkbox
+      $('#select-all').on('click', function () {
+        var rows = table.rows({ search: 'applied' }).nodes()
+        $('input[type="checkbox"]', rows).prop('checked', this.checked)
+        toggleDeleteButton()
+      })
+    
+      // Handle individual checkbox click
+      $('#sitesTable tbody').on('change', 'input[type="checkbox"]', function () {
+        if (!this.checked) {
+          var el = $('#select-all').get(0)
+          if (el && el.checked && 'indeterminate' in el) {
+            el.indeterminate = true
+          }
+        }
+        toggleDeleteButton()
+      })
+    
+      // Toggle delete button based on checkbox selection
+      $(document).ready(function () {
+        // Fonction pour activer/désactiver le bouton de suppression
+        function toggleDeleteButton() {
+          var selected = $('input[type="checkbox"]:checked').length > 0
+          $('#delete-selected').prop('disabled', !selected)
+        }
+    
+        // Activer/désactiver le bouton au changement des cases à cocher
+        $('input[type="checkbox"]').on('change', toggleDeleteButton)
+    
+        // Vérifier l'état du bouton au chargement de la page
+        toggleDeleteButton()
+    
+        // Gestion du bouton "Supprimer" dans le modal
+        $('#confirmDeleteButton').click(function () {
+          var selectedIds = []
+          $('input[type="checkbox"]:checked').each(function () {
+            selectedIds.push($(this).val())
+          })
+    
+          // Envoi de la requête POST pour la suppression
+          $.ajax({
+            url: '{% url "home:delete_multiple_sites" %}', // URL Django
+            method: 'POST',
+            data: {
+              ids: selectedIds.join(','), // Convertir en chaîne séparée par des virgules
+              csrfmiddlewaretoken: '{{ csrf_token }}' // Jeton CSRF
+            },
+            success: function (response) {
+              if (response.success) {
+                // Recharger la page pour refléter les changements
+                location.reload()
+              } else {
+                alert(response.error)
+              }
+            },
+            error: function (xhr, status, error) {
+              alert('Une erreur est survenue : ' + error)
+            }
+          })
+        })
+      })
+    
+      // Handle entries count change
+      $('#entries-count').on('change', function () {
+        var val = $(this).val()
+        table.page.len(val).draw()
+      })
+    })
+  </script>
+{% endblock %}

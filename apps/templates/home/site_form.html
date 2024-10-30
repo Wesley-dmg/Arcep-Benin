@@ -1,0 +1,305 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Ajouter un nouveau site
+{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/static/assets/css/style.css" />
+  <style>
+
+    .step-container {
+      margin: 20px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .step {
+      text-align: center;
+      flex: 1;
+    }
+
+    .step-number {
+      font-size: 1.5rem;
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
+      border-radius: 50%;
+      margin: 0 auto 5px;
+      background: #f5f5f5;
+      border: 1px solid #007bff;
+    }
+
+    .step.complete .step-number {
+      background: green;
+      color: white;
+    }
+
+    .step.active .step-number {
+      background: #007bff;
+      color: white;
+    }
+
+    .step-label {
+      font-weight: bold;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.show {
+      display: block;
+      
+    }
+
+    .tab-pane {
+      display: none;
+      transition: opacity 0.5s ease;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container ">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="step-container">
+          <div class="step" id="step1">
+            <span class="step-number px-2" id="step1-number">1</span>
+            <div class="step-label">Informations Générales</div>
+          </div>
+          <div class="step" id="step2">
+            <span class="step-number px-2" id="step2-number">2</span>
+            <div class="step-label">Emplacement</div>
+          </div>
+          <div class="step" id="step3">
+            <span class="step-number px-2" id="step3-number">3</span>
+            <div class="step-label">Détails Techniques</div>
+          </div>
+        </div>
+
+        <div class="tab-content mt-2">
+          <form method="post" enctype="multipart/form-data" id="siteForm">
+            {% csrf_token %}
+            <!-- Onglet Informations Générales -->
+            <div class="tab-pane fade show active" id="general" role="tabpanel">
+              <div class="card ">
+                <div class="card-header">Informations Générales</div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="form-group col-6">
+                        <label for="id_nom">Nom du site</label>
+                        <input type="text" id="id_nom" name="nom" class="form-control" placeholder="Nom du site" required />
+                        <div id="nomFeedback" class="invalid-feedback"></div>
+                      </div>
+                      <div class="col-6">
+                      <label for="id_operateur">Opérateur</label>
+                      <select id="id_operateur" name="operateur" class="form-control" required>
+                        <option value="">Sélectionner un opérateur</option>
+                        {% for operateur in operateurs %}
+                          <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
+                        {% endfor %}
+                      </select>
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group col-4">
+                        <label for="id_num_dossier">Numéro de dossier</label>
+                        <input type="text" id="id_num_dossier" name="num_dossier" class="form-control" placeholder="Numéro de dossier" />
+                      </div>
+                      <div class="col-4">
+                        <label for="id_date_mise_en_service">Date de mise en service</label>
+                        <input type="date" id="id_date_mise_en_service" name="date_mise_en_service" class="form-control" />
+                      </div>
+                      <div class="col-4">
+                      <label for="id_proprietaire">Propriétaire</label>
+                      <input type="text" id="id_proprietaire" name="proprietaire" class="form-control" placeholder="Propriétaire" />
+                      </div>
+                    </div> 
+                    <div class="form-group">
+                      <label for="id_photo">Photo du site</label>
+                      <input type="file" id="id_photo" name="photo" class="form-control" />
+                      <small id="photoError" class="text-danger"></small>
+                    </div>
+                    <div class="form-group">
+                      <label for="id_description">Description</label>
+                      <textarea id="id_description" name="description" class="form-control" placeholder="Description"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between ">
+                    <button type="button" class="btn btn-primary next-step" onclick="showStep('location'); updateSteps(2);">Suivant : Emplacement</button>
+                    </div>
+                  </div>
+              </div>
+            </div>
+
+            <!-- Onglet Emplacement -->
+            <div class="tab-pane fade" id="location" role="tabpanel">
+            <div class="card">
+                <div class="card-header">Emplacement</div>
+                <div class="card-body">
+                <div class="form-row mt-2">
+                  <div class="col">
+                    <label for="id_latitude">Latitude</label>
+                    <input type="number" step="0.000001" id="id_latitude" name="latitude" class="form-control" placeholder="Latitude" required /> 
+                  </div>
+                  <div class="col">
+                    <label for="id_longitude">Longitude</label>
+                    <input type="number" step="0.000001" id="id_longitude" name="longitude" class="form-control" placeholder="Longitude" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="id_emplacement">Emplacement</label>
+                  <div class="input-group">
+                    <select id="id_emplacement" name="emplacement" class="form-control" required>
+                      <option value="">Sélectionner un emplacement</option>
+                      {% for emplacement in emplacements %}
+                        <option value="{{ emplacement.id }}">{{ emplacement }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modalListeEmplacements"><i class="fas fa-eye"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="id_localite">Localité</label>
+                  <div class="input-group ">
+                    <select id="id_localite" name="localite" class="form-control select2 d-inline-block">
+                      <option value="">Sélectionner une localité</option>
+                      {% for localite in localites %}
+                        <option value="{{ localite.id }}">{{ localite }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="input-group-append">
+                      <a href="{% url 'home:localite_create' %}" class="btn btn-outline-primary"><i class="fas fa-plus-circle"></i></a>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                  <button type="button" class="btn btn-secondary prev-step" onclick="showStep('general'); updateSteps(1);">Précédent : Informations générales</button>
+                  <button type="button" class="btn btn-primary next-step" onclick="showStep('technology'); updateSteps(3);">Suivant : Détails techniques</button>
+                </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Onglet Détails Techniques -->
+            <div class="tab-pane fade" id="technology" role="tabpanel">
+            <div class="card mb-4">
+              <div class="card-header">Détails Techniques</div>
+              <div class="card-body">
+                <div class="form-row mt-2">
+                  <div class="col-6">
+                    <label for="id_hauteur_antenne">Hauteur de l'antenne (en mètres)</label>
+                    <input type="number" step="0.01" id="id_hauteur_antenne" name="hauteur_antenne" class="form-control" />
+                  </div>
+                  <div class="col-6 px-5">
+                    <label class="mb-4">Camouflage</label><br />
+                    <div class="form-check form-check-inline">
+                      <input type="radio" id="id_camouflage_oui" name="camouflage" value="True" class="form-check-input" />
+                      <label class="form-check-label" for="id_camouflage_oui">Oui</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input type="radio" id="id_camouflage_non" name="camouflage" value="False" class="form-check-input" />
+                      <label class="form-check-label" for="id_camouflage_non">Non</label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <label for="id_type_pylone">Type de pylône</label>
+                    <input type="text" id="id_type_pylone" name="type_pylone" class="form-control" placeholder="Type de pylône" />
+                  </div> 
+                  <div class="col-6 px-5">
+                    <label for="id_technologies">Technologies</label>
+                    <select id="id_technologies" name="technologies" class="form-control select2" multiple="multiple">
+                      {% for code, name in technologies %}
+                        <option value="{{ code }}">{{ name }}</option>
+                      {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Sélectionnez les technologies supportées.</small>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                  <button type="button" class="btn btn-secondary prev-step" onclick="showStep('location'); updateSteps(2);">Précédent : Emplacement</button>
+                  <button type="submit" class="btn btn-success">Enregistrer</button>
+                </div>
+              </div>
+            </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal pour la liste des emplacements -->
+  <div class="modal fade" id="modalListeEmplacements" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">Liste des Emplacements</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="d-flex justify-content-center"> 
+        <a href="{% url 'home:emplacement_create' %} " class="btn btn-sm btn-outline-primary">Ajouter un emplacement </a>
+      </div>
+      <div class="modal-body"> 
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type d'Emplacement</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for emplacement in emplacements %}
+              <tr>
+                <td>{{ emplacement.id }}</td>
+                <td>{{ emplacement.type_emplacement }}</td>
+                <td>
+                  <a href="{% url 'home:emplacement_update' emplacement.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-edit"></i></a>
+                  <a href="{% url 'home:emplacement_delete_confirm' emplacement.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash-alt"></i></a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.select2').select2(); // Initialisation Select2
+      // Affichage de l'onglet par défaut
+      showStep('general');
+    });
+
+function updateSteps(step) {
+  $('.step').removeClass('active complete');
+
+  if (step >= 1) {
+    $('#step1').addClass('complete');
+  }
+  if (step >= 2) {
+    $('#step2').addClass('complete');
+  }
+  if (step === 3) {
+    $('#step3').addClass('active');
+  }
+}
+
+function showStep(step) {
+  $('.tab-pane').removeClass('show active');
+  $('#' + step).addClass('show active');
+}
+  </script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Gestion des Technologies
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Liste des technologies -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Liste des Technologies</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Barre de recherche -->
+                    <div class="mb-4">
+                        <input type="text" id="search-technologie" class="form-control" placeholder="Rechercher une technologie..." autocomplete="off">
+                    </div>
+
+                    <!-- Table défilable -->
+                    <div id="technologie-list" class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type de Technologie</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="technologie-table-body">
+                                {% for technologie in technologies %}
+                                <tr>
+                                    <td>{{ technologie.id }}</td>
+                                    <td>{{ technologie.type_technologie }}</td>
+                                    <td class="text-center">
+                                        <a href="{% url 'home:technologie_update' technologie.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                        <form method="POST" action="{% url 'home:technologie_delete' technologie.id %}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette technologie ?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash-alt"></i> Supprimer
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Aucune technologie trouvée.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de création de technologie -->
+        <div class="col-md-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Créer une Technologie</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="type_technologie">Type de Technologie</label>
+                            <input type="text" name="type_technologie" id="type_technologie" class="form-control" placeholder="Nom de la technologie" required>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary btn-block">Créer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Messages de succès ou d'erreur -->
+            {% if messages %}
+            <div class="alert alert-info mt-3">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.getElementById('search-technologie').addEventListener('keyup', function () {
+    let query = this.value;
+    fetch(`/search-technologies/?q=${query}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        let tableBody = document.getElementById('technologie-table-body');
+        tableBody.innerHTML = ''; // On efface l'ancienne liste
+
+        if (data.technologies.length > 0) {
+            data.technologies.forEach(tech => {
+                let row = `<tr>
+                            <td>${tech.id}</td>
+                            <td>${tech.type_technologie}</td>
+                            <td class="text-center">
+                                <a href="/technologie/update/${tech.id}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </a>
+                                <form method="POST" action="/technologie/delete/${tech.id}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette technologie ?');">
+                                    <input type="hidden" name="csrfmiddlewaretoken" value="${data.csrf_token}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i> Supprimer
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune technologie trouvée.</td></tr>';
+        }
+    });
+});
+</script>
+{% endblock %}

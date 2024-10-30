@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Confirmation de suppression
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Confirmation de suppression</h3>
+          </div>
+          <div class="card-body">
+            <p>
+              Êtes-vous sûr de vouloir supprimer la localité <strong>{{ localite.localite|upper }} - {{ localite.commune }} - {{ localite.departement }}</strong> ?
+            </p>
+            <form method="post">
+              {% csrf_token %}
+              <a href="{% url 'home:localite_create' %}" class="btn btn-secondary">Annuler</a>
+              <button type="submit" class="btn btn-danger">Supprimer</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

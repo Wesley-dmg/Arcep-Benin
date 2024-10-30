@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Supprimer une commune
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-8 offset-md-2">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Supprimer la commune</h3>
+          </div>
+          <div class="card-body">
+            <p>Es-tu sûr de vouloir supprimer la commune "{{ commune.nom }}" ?</p>
+            <form method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <a href="{% url 'home:commune_list' %}" class="btn btn-secondary">Annuler</a>
+                <button type="submit" class="btn btn-danger">Supprimer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

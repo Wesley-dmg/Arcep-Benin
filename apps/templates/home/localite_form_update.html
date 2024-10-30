@@ -1,0 +1,86 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Mise à jour localité
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5 d-flex align-items-center justify-content-center">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Mise à jour localité</h3>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <!-- Département -->
+              <div class="form-group">
+                <label for="id_departement">Département</label>
+                <select id="id_departement" name="departement" class="form-control">
+                  <option value="">Sélectionner un département</option>
+                  {% for departement in departements %}
+                    <option value="{{ departement.id }}" {% if localite.commune.departement.id == departement.id %}selected{% endif %}>{{ departement.nom }} </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="id_commune">Commune</label>
+                <select id="id_commune" name="commune" class="form-control select2">
+                  <option value="">Sélectionner une commune</option>
+                  {% for commune in communes %}
+                    <option value="{{ commune.id }}" {% if localite.commune.id == commune.id %}selected{% endif %}> {{ commune.nom }} </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Localité -->
+              <div class="form-group">
+                <label for="id_localite">Localité</label>
+                <input type="text" id="id_localite" name="localite" class="form-control" placeholder="Localité" value="{{ localite.localite }}" required />
+              </div>
+
+              <!-- Bouton de soumission -->
+              <div class="form-group">
+                <a href="{% url 'home:site_create' %}" class="btn btn-secondary">Annuler</a>
+                <input type="submit" class="btn btn-primary" value="Enregistrer" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block javascripts %}
+  <script>
+    $(document).ready(function () {
+      $('#id_departement').on('change', function () {
+        var departementId = $(this).val();
+        if (departementId) {
+          $.ajax({
+            url: "{% url 'home:get_communes' %}",
+            data: {
+              departement_id: departementId
+            },
+            success: function (data) {
+              var communeSelect = $('#id_commune');
+              communeSelect.empty();
+              communeSelect.append('<option value="">Sélectionner une commune</option>');
+              data.forEach(function (commune) {
+                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
+              });
+            }
+          });
+        } else {
+          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
+        }
+      });
+    });
+  </script>
+
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Confirmation de suppression
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Confirmation de suppression</h3>
+          </div>
+          <div class="card-body">
+            <p>Êtes-vous sûr de vouloir supprimer l'emplacement <strong>{{ emplacement.type_emplacement }}</strong> ?</p>
+            <form method="post">
+              {% csrf_token %}
+              <a href="{% url 'home:site_create' %}" class="btn btn-secondary">Annuler</a>
+              <button type="submit" class="btn btn-danger">Supprimer</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

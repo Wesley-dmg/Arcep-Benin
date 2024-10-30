@@ -1,0 +1,46 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Modifier un Opérateur
+{% endblock %}
+
+{% block content %}
+  <!-- Page content -->
+  <div class="container mt-5 d-flex justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header text-center">
+          <h3 class="mb-0">Modifier un Opérateur</h3>
+        </div>
+        <div class="card-body">
+          <!-- templates/home/operateur_form.html -->
+          <form method="post" enctype="multipart/form-data" action="{% url 'home:operateur_update' operateur.id %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+              <label for="id_nom">Nom</label>
+              <input type="text" id="id_nom" name="nom" class="form-control" placeholder="Nom de l'opérateur" value="{{ operateur.nom }}" required />
+            </div>
+
+            <div class="form-group">
+              <label for="id_logo">Logo</label>
+              <input type="file" id="id_logo" name="logo" class="form-control-file" />
+              {% if operateur.logo %}
+                <p>Logo actuel : <img src="{{ operateur.logo.url }}" alt="{{ operateur.nom }}" width="100" /></p>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="id_color">Couleur</label>
+              <input type="text" id="id_color" name="couleur" class="form-control" placeholder="Couleur de l'opérateur" value="{{ operateur.couleur }}" required />
+            </div>
+            <div class="d-flex justify-content-around text-center">
+              <a href=" {% url 'home:operateur_list'  %}" class="btn btn-neutral "> Retour</a>
+              <input type="submit" class="btn btn-primary" value="Enregistrer" />
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div> 
+{% endblock %}

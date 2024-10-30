@@ -1,0 +1,49 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Modifier une commune
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-8 offset-md-2">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Modifier la commune</h3>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+
+              <!-- Département -->
+              <div class="form-group">
+                <label for="id_departement">Département</label>
+                <select id="id_departement" name="departement" class="form-control" required>
+                  <option value="">Sélectionner un département</option>
+                  {% for departement in departements %}
+                    <option value="{{ departement.id }}" {% if departement.id == commune.departement.id %}selected{% endif %}>
+                      {{ departement.nom }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Nom de la commune -->
+              <div class="form-group">
+                <label for="id_nom">Nom de la commune</label>
+                <input type="text" id="id_nom" name="nom" class="form-control" value="{{ commune.nom }}" required>
+              </div>
+
+              <!-- Boutons -->
+              <div class="form-group">
+                <a href="{% url 'home:commune_list' %}" class="btn btn-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

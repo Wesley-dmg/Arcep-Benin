@@ -1,0 +1,22 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Modifier Technologies
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Modifier la Technologie</h2>
+
+    <!-- Formulaire pour mettre à jour la technologie -->
+    <form method="POST" action="{% url 'technologie_update' technologie.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="type_technologie">Type de Technologie</label>
+            <input type="text" name="type_technologie" class="form-control" value="{{ technologie.type_technologie }}" required>
+        </div>
+        <a href="{% url 'technologie_list_create' %}" class="btn btn-secondary">Annuler</a>
+        <button type="submit" class="btn btn-success">Mettre à jour</button>
+    </form>
+</div>
+{% endblock %}

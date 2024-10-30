@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Confirmation de suppression
+{% endblock %}
+
+{% block content %}
+     <div class="header bg-primary pb-1">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-1">
+          <div class="col-lg-6 col-7">
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="#"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                  <a href="#">Operateur</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Suppression</li>
+              </ol>
+            </nav>
+          </div> 
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Confirmation de suppression</h3>
+          </div>
+          <div class="card-body">
+            <p>
+              Êtes-vous sûr de vouloir supprimer l'operateur <strong>{{ operateur.nom }}</strong> ?
+            </p>
+            <form method="post">
+              {% csrf_token %}
+              <a href="{% url 'home:operateur_list' %}" class="btn btn-secondary">Annuler</a>
+              <button type="submit" class="btn btn-danger">Supprimer</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

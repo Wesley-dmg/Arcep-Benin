@@ -1,0 +1,124 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %} Cartographie des Sites {% endblock title %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
+<style>
+    .map-canvas {
+        height: 100vh;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+                <div class="col-lg-6 col-7">
+                    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="#">Cartographie</a></li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-lg-6 col-5 text-right">
+                    <a href="#" class="btn btn-sm btn-neutral">Nouveau</a>
+                    <a href="#" class="btn btn-sm btn-neutral">Filtres</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card border-0">
+                <div id="carteSite" class="map-canvas"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
+
+<script>
+    window.onload = function() {
+        var mapElement = document.getElementById('carteSite');
+        if (!mapElement) {
+            console.error('Element with ID "carteSite" not found.');
+            return;
+        }
+
+        // Initialisation de la carte
+        var map = L.map('carteSite', { fullscreenControl: true }).setView([9.3077, 2.3158], 9); 
+
+        // Ajout de la couche de tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Tableau pour stocker les coordonnées des sites
+        var bounds = [];
+
+        // Parcours des sites pour ajouter les marqueurs
+        {% for site in sites %}
+        var latitude = parseFloat("{{ site.latitude }}");
+        var longitude = parseFloat("{{ site.longitude }}");
+        var siteNom = "{{ site.nom|escapejs }}";
+        var OperateurNom = "{{ site.operateur.nom|escapejs }}";
+        var siteLocalite = "{{ site.localite.localite|escapejs }}";
+        var siteId = "{{ site.id }}";
+        var logoUrl = "/static/media/{{ site.operateur.logo }}"; 
+
+        // Vérification que les coordonnées sont valides
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+            bounds.push([latitude, longitude]);
+
+            // Détermination de la couleur du marqueur selon la conformité
+            var markerColor;
+            {% if site.conformite %}
+                {% if site.conformite.statut %}
+                    markerColor = "{{ site.operateur.couleur|escapejs }}";
+                {% else %}
+                    markerColor = 'red';
+                {% endif %}
+            {% else %}
+                markerColor = 'gray';
+            {% endif %}
+
+            var marker = L.circleMarker([latitude, longitude], {
+                color: markerColor,
+                fillOpacity: 1,
+                radius: 4
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div>
+                    <img src="${logoUrl}" alt="${OperateurNom}" style="width: 20px; height: auto; display: inline; margin-bottom: 5px;">
+                    <b>${siteNom}</b><br>
+                    ${siteLocalite}<br>
+                    <a href="/site/${siteId}" class="btn  btn-sm">
+                        <i class="fa fa-info-circle"></i>
+                    </a>
+                </div>
+            `);
+        }
+        {% endfor %}
+
+        // Ajustement de la vue de la carte pour inclure tous les marqueurs
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    };
+</script>
+{% endblock javascripts %}

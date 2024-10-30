@@ -1,0 +1,360 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Home
+{% endblock %}
+
+{% block stylesheets %}
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" />
+{% endblock %}
+
+{% block content %}
+  <!-- Header -->
+  <div class="header bg-primary pb-6">
+    <div class="container-fluid">
+      <div class="header-body">
+        <div class="row align-items-center py-4">
+          <div class="col-lg-6 col-7">
+            <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                <li class="breadcrumb-item">
+                  <a href="#"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                  <a href="#">Dashboard</a>
+                </li>
+              </ol>
+            </nav>
+          </div>
+          <div class="col-lg-6 col-5 text-right">
+            <a href="{% url 'home:file_upload' %}" class="btn btn-sm btn-neutral">Importation</a> 
+          </div>
+        </div> 
+        <!-- Card stats -->
+        <div class="row">
+          <div class="col-xl-4 col-md-6">
+            <div class="card card-stats">
+              <!-- Card body -->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col">
+                    <h5 class="card-title text-uppercase text-muted mb-0">Total des Sites</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ total_sites }}</span>
+                  </div>
+                  <div class="col-auto">
+                    <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
+                      <i class="ni ni-building"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-4 col-md-6">
+            <div class="card card-stats">
+              <!-- Card body -->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col">
+                    <h5 class="card-title text-uppercase text-muted mb-0">Nouveaux Sites</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ new_sites.count }}</span>
+                  </div>
+                  <div class="col-auto">
+                    <div class="icon icon-shape bg-gradient-orange text-white rounded-circle shadow">
+                      <i class="ni ni-chart-bar-32"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-4 col-md-6">
+            <div class="card card-stats">
+              <!-- Card body -->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col">
+                    <h5 class="card-title text-uppercase text-muted mb-0">Pourcentage de Conformité</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ compliance_percentage|floatformat:'3' }}%</span>
+                  </div>
+                  <div class="col-auto">
+                    <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                      <i class="ni ni-check-bold"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <!-- Nouveaux sites par mois -->
+      <div class="col-xl-6">
+        <div class="card">
+          <div class="card-header bg-transparent">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-primary text-uppercase ls-1 mb-1">Overview</h6>
+                <h5 class="h3 text-primary mb-0">Nouveaux Sites par Mois</h5>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Chart -->
+            <div class="chart">
+              <canvas id="chart-new-sites-per-month" class="chart-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="card">
+          <div class="card-header bg-transparent">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-uppercase text-muted ls-1 mb-1">Performance</h6>
+                <h5 class="h3 mb-0">Statistiques par Opérateurs</h5>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Chart -->
+            <div class="chart">
+              <canvas id="chart-operateur-statistics" class="chart-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-4">
+        <div class="card">
+          <div class="card-header bg-transparent">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-primary text-uppercase ls-1 mb-1">Overview</h6>
+                <h5 class="h3 text-primary mb-0">Statistiques des Sites</h5>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Chart -->
+            <div class="chart">
+                <canvas id="chart-site-statistics" class="chart-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-8">
+        <div class="card">
+          <div class="card-header border-0">
+            <div class="row align-items-center">
+              <div class="col">
+                <h3 class="mb-0">Liste des Sites</h3>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <!-- Projects table -->
+            <table class="table align-items-center table-flush" id="sites-table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Nom du Site</th>
+                  <th scope="col">Date de mise en service</th>
+                  <th scope="col">Conformité</th>
+                  {% comment %} <th scope="col">Rapport CEM</th> {% endcomment %}
+                  <th scope="col" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in site_data %}
+                  <tr>
+                    <th scope="row">{{ item.site.nom }}</th>
+
+                    <td>{{ item.site.date_mise_en_service }}</td>
+                    <td class="d-flex justify-content-center">
+                      {% if item.has_conformite %}
+                        {% if item.site.conformite.statut %}
+                          <span class="badge d-block w-75 badge-success text-center">Conforme</span>
+                        {% else %}
+                          <span class="badge d-block w-auto badge-danger text-center">Non Conforme</span>
+                        {% endif %}
+                        {% else %}
+                        <span class=" badge badge-warning  d-block w-75 text-center">N/A</span>
+                      {% endif %}
+                    </td>
+                    {% comment %} <td>
+                      {% if item.has_cem_report %}
+                        <i class="fas fa-file-alt badge-success text-center"></i>
+                      {% else %}
+                        <span class="badge badge-warning text-center">Absent</span>
+                      {% endif %}
+                    </td> {% endcomment %}
+                    <td class="text-center">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="actionsDropdown{{ item.site.id }}" aria-label="Actions pour {{ item.site.nom }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v"></i></button>
+                        <div class="dropdown-menu" aria-labelledby="actionsDropdown{{ item.site.id }}">
+                          <a class="dropdown-item" href="{% url 'home:site_detail' item.site.id %}" aria-label="Voir les détails du site {{ item.site.nom }}"><i class="fas fa-eye"></i> Voir</a>
+                          <a class="dropdown-item" href="{% url 'home:site_update' item.site.id %}" aria-label="Modifier le site {{ item.site.nom }}"><i class="fas fa-edit"></i>  Modifier site</a>
+                          {% if item.has_conformite %}
+                            <a class="dropdown-item" href="{% url 'home:update_conformite' item.site.id %}"><i class="fas fa-edit"></i> Éditer conformité </a>
+                          {% else %}
+                            <a class="dropdown-item" href="{% url 'home:add_conformite' item.site.id %}" aria-label="Ajouter une conformité pour {{ item.site.nom }}"><i class="fas fa-clipboard-check"></i> Ajouter une conformité</a>
+                          {% endif %}
+
+                          <div class="dropdown-divider"></div>
+                          <a class="dropdown-item text-danger" href="{% url 'home:site_delete' item.site.id %}" aria-label="Supprimer le site {{ item.site.nom }}"><i class="fas fa-trash-alt"></i> Supprimer</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('#sites-table').DataTable({
+        "paging": true,
+        "searching": true,
+        "ordering": true
+      });
+
+      // Graphique des statistiques des sites
+      var ctxSiteStatistics = document.getElementById('chart-site-statistics').getContext('2d');
+      var siteStatisticsChart = new Chart(ctxSiteStatistics, {
+        type: 'pie',
+        data: {
+          labels: ['Total Sites', 'Non-Compliant Sites'],
+          datasets: [{
+            data: [
+            {{total_sites}}, 
+            {{ non_compliant_sites_count }}
+            ],
+            backgroundColor: ['rgb(0, 123, 255,0.9)', 'rgb(220, 53, 69,0.9)'],
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return tooltipItem.label + ': ' + tooltipItem.raw + ' sites';
+                }
+              }
+            }
+          },
+        }
+      });
+
+      // Graphique des statistiques des opérateurs
+      var ctxOperateurStatistics = document.getElementById('chart-operateur-statistics').getContext('2d');
+      var operateurStatisticsChart = new Chart(ctxOperateurStatistics, {
+        type: 'bar',
+        data: {
+          labels: {{ operator_statistics_labels|safe }},
+          datasets: [{
+            label: 'Nombre de sites par opérateur',
+            data: {{ operator_statistics_counts|safe }},
+            backgroundColor: {{ operator_statistics_colors|safe }},
+            barPercentage: 0.4,
+            categoryPercentage: 0.6,
+            borderRadius: 5,
+          },
+          {
+            label: 'Nombre de sites non conformes par opérateur',
+            data: {{ operator_statistics_non_conform_counts|safe }},
+            backgroundColor: '#dc3545',
+            barPercentage: 0.4,
+            borderColor: '#fff',
+            borderWidth: 1,
+            borderRadius: 5,
+            categoryPercentage: 0.6,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return tooltipItem.label + ': ' + tooltipItem.raw + ' sites';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        }
+      });
+
+      // Graphique des nouveaux sites par mois
+      var ctxNewSitesPerMonth = document.getElementById('chart-new-sites-per-month').getContext('2d');
+      var newSitesPerMonthChart = new Chart(ctxNewSitesPerMonth, {
+        type: 'line',
+        data: {
+          labels: Object.keys({{ new_sites_per_month|safe }}),
+          datasets: [{
+            label: 'Nouveaux Sites',
+            data: Object.values({{ new_sites_per_month|safe }}),
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+            fill: true,
+            tension: 0.1,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return tooltipItem.label + ': ' + tooltipItem.raw + ' sites';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        }
+      });
+    });
+  </script>
+{% endblock %}

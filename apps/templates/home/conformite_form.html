@@ -1,0 +1,189 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+  Ajouter une conformité
+{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="/static/assets/css/style.css">
+  <style>
+    .container { 
+      min-height: 80vh;
+    } 
+
+    .card { 
+      max-width: 600px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .section {
+      display: none;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .section.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .form-buttons { 
+      margin-top: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px; 
+    }
+
+    .btn {
+      min-width: 120px;
+    }
+
+    .step-container {
+      margin-bottom: 20px;
+    }
+
+    .step {
+      flex: 1;
+    }
+
+    .step-number {
+      font-size: 1.5rem;
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      border: 2px solid #007bff;
+      margin: 0 auto;
+    }
+
+    .step.active .step-number {
+      background: #007bff;
+      color: white;
+    }
+
+    .step-label {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container d-flex justify-content-center align-items-center mt-5">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card w-100">
+          <div class="card-body">
+            
+            <div class="step-container d-flex justify-content-between">
+              <div class="step text-center active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">Rapport de Conformité</div>
+              </div>
+              <div class="step text-center" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">Rapport d'analyse</div>
+              </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" id="multiSectionForm">
+              {% csrf_token %}
+
+              <input type="hidden" name="site_id" value="{{ current_site.id }}">
+
+              <!-- Section 1 : Conformité -->
+              <div class="section active" id="section1">
+                {% comment %} <div class="section-title text-center">Rapport de conformité</div> {% endcomment %}
+
+                <div class="form-group">
+                  <label for="rapport">Rapport de conformité (PDF)</label>
+                  <input type="file" id="rapport" name="rapport" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="date_inspection">Date d'inspection</label>
+                  <input type="date" id="date_inspection" name="date_inspection" class="form-control" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="statut">Statut</label><br>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="statut" id="conforme" value="conforme" required>
+                    <label class="form-check-label" for="conforme">Conforme</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="statut" id="non_conforme" value="non_conforme" required>
+                    <label class="form-check-label" for="non_conforme">Non conforme</label>
+                  </div>
+                </div>
+
+                <div class="form-buttons d-flex justify-content-between">
+                  <button type="button" class="btn btn-primary" onclick="nextSection()">Suivant</button>
+                </div>
+              </div>
+
+              <!-- Section 2 : Informations sur le site -->
+              <div class="section" id="section2">
+                {% comment %} <div class="section-title text-center">Rapport d'analyse</div> {% endcomment %}
+
+                <div class="form-group">
+                  <label for="ref_courrier">Référence de courrier</label>
+                  <input type="text" id="ref_courrier" name="ref_courrier" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                  <label for="observation">Observation</label>
+                  <textarea id="observation" name="observation" class="form-control"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="avis_arcep">Avis ARCEP</label>
+                  <textarea id="avis_arcep" name="avis_arcep" class="form-control"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="date_autorisation">Date d'autorisation</label>
+                  <input type="date" id="date_autorisation" name="date_autorisation" class="form-control" />
+                </div>
+
+                <div class="form-buttons d-flex justify-content-between">
+                  <button type="button" class="btn btn-secondary" onclick="prevSection()">Précédent</button>
+                  <button type="submit" class="btn btn-primary">Soumettre</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+  let currentSection = 1;
+
+  function nextSection() {
+    document.getElementById('section' + currentSection).classList.remove('active');
+    document.getElementById('step' + currentSection).classList.remove('active');
+    currentSection++;
+    document.getElementById('section' + currentSection).classList.add('active');
+    document.getElementById('step' + currentSection).classList.add('active');
+  }
+
+  function prevSection() {
+    document.getElementById('section' + currentSection).classList.remove('active');
+    document.getElementById('step' + currentSection).classList.remove('active');
+    currentSection--;
+    document.getElementById('section' + currentSection).classList.add('active');
+    document.getElementById('step' + currentSection).classList.add('active');
+  }
+</script>
+{% endblock %}

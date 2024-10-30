@@ -1,0 +1,72 @@
+<nav class="sidenav navbar navbar-vertical fixed-left navbar-expand-xs navbar-light bg-primary" id="sidenav-main">
+  <div class="scrollbar-inner">
+    <!-- Brand -->
+    <div class="sidenav-header align-items-center">
+      <a class="navbar-brand" href="/"><img src="/static/assets/img/brand/arcep.png" class="navbar-brand-img" alt="Logo." width="90%" height="auto" /></a>
+    </div>
+    <div class="navbar-inner">
+      <!-- Collapse -->
+      <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link text-light" href="/">
+              <i class="ni ni-tv-2"></i>
+              <span class="nav-link-text">Dashboard</span>
+            </a>
+          </li>
+
+          <!-- Gestion des Opérateurs -->
+          <li class="nav-item dropdown">
+            <a class="nav-link text-light dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="ni ni-planet"></i>
+              <span class="nav-link-text text-light">Gestion des Opérateurs</span>
+            </a>
+            <div class="dropdown-menu bg-primary text-light">
+              <a class="dropdown-item text-light ml-5" href="{% url 'home:operateur_list' %}">Tous</a>
+              <a class="dropdown-item text-light ml-5" href="{% url 'home:operateur_create' %}">Ajouter un Opérateur</a>
+            </div>
+          </li>
+
+          
+          <li class="navbar-item">
+            <a class="nav-link text-light " href="{% url 'home:statistics' %}">
+              <i class="ni ni-chart-bar-32"></i>
+              <span>Statistiques</span> 
+            </a>
+          </li> 
+
+
+          <!-- Gestion des Sites -->
+          <li class="nav-item dropdown">
+            <a class="nav-link text-light dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="ni ni-pin-3"></i>
+              <span class="nav-link-text text-light">Gestion des Sites</span>
+            </a>
+            <div class="dropdown-menu bg-primary text-light">
+              <a class="dropdown-item text-light ml-5" href="{% url 'home:site_list' %}">Tous</a>
+              <a class="dropdown-item text-light ml-5" href="{% url 'home:site_create' %}">Ajouter un Site</a>
+            </div>
+          </li>
+          <li class="navbar-item">
+            <a class="nav-link text-light " href="{% url 'home:map' %}">
+              <i class="ni ni-pin-3"></i>
+              <span>Cartographie</span>
+            </a>
+          </li>
+
+          <!-- Déconnexion -->
+          <li class="nav-item">
+            <a class="nav-link text-light" href="{% url 'authentication:logout' %}">
+              <i class="ni ni-user-run text-red"></i>
+              <span class="nav-link-text text-light">Déconnexion</span>
+            </a>
+          </li>
+
+
+          
+        </ul> 
+        <!-- Nav items -->
+      </div>
+    </div>
+  </div>
+</nav>

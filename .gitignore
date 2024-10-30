@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environnements virtuels
+env/
+venv/
+ENV/
+.venv/
+*.env
+
+# Fichiers de base de données
+db.sqlite3
+
+# Fichiers de logs
+*.log
+debug.log
+
+# Dossiers de fichiers statiques
+staticfiles/
+
+# Dossiers de migrations
+*/migrations/*.py
+*/migrations/__init__.py
+
+# Fichiers temporaires
+*.tmp
+*.bak
+
+# Fichiers de configuration de l'IDE
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Exclure les fichiers de dépendances
+*.egg-info/
+*.egg
