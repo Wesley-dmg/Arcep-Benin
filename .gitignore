@@ -15,7 +15,6 @@ ENV/
 
 # Fichiers de logs
 *.log
-debug.log
 
 # Dossiers de fichiers statiques
 staticfiles/

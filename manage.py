@@ -1,15 +1,3 @@
-#!/usr/bin/env python
-'''import sys
-
-def trace_import(frame, event, arg):
-    if event == "call" and frame.f_code.co_name == "<module>":
-        module_name = frame.f_globals.get('__name__', '')
-        # Ne pas tracer les bibliothèques externes
-        if "site-packages" not in frame.f_code.co_filename:
-            print(f"Importing {module_name}")
-sys.settrace(trace_import)
-'''
-
 import os
 import sys
 
