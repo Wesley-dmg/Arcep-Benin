@@ -15,8 +15,8 @@ import unicodedata
 import openpyxl
 import logging
 import re
-import io
-import pdb 
+# import io
+# import pdb 
 
 logger = logging.getLogger(__name__)
 
@@ -105,8 +105,6 @@ def normalize_column_name(col_name):
     
     return col_name.strip()
 
-import re
-
 def safe_strip(value):
     """
     Supprime les espaces en début et en fin de chaîne, ainsi que les espaces insécables et invisibles.
@@ -145,8 +143,6 @@ def clean_row_values(row):
                 logger.debug(f"Valeur pour la colonne '{key}' nettoyée : '{value}' -> '{cleaned_value}'.")
             row[key] = cleaned_value or None  
     return row
-
-
 
 # Nettoyage des valeurs numériques
 def clean_numeric_value(value):
@@ -278,7 +274,6 @@ def process_excel_file(uploaded_file):
         df.columns = [normalize_column_name(col) for col in df.columns]
         df = df.fillna('')  # Remplir les NaN avec des chaînes vides
         
-        
         # print(df.columns)  # Vérifie que toutes les colonnes sont présentes 
         # pdb.set_trace()  # Met le point d'arrêt ici
         
@@ -338,7 +333,8 @@ def process_excel_file(uploaded_file):
                     'observation': row.get('observations'),
                     'emplacement': emplacement_instance,
                     'type_pylone': row.get('type_pylone'),
-                    'hauteur_antenne': row.get('hauteur_antenne'),
+                    # 'hauteur_antenne': row.get('hauteur_antenne'),
+                    'hauteur_antenne': hauteur_antenne,
                     'camouflage': camouflage ,
                     'description': row.get('description'),
                     'proprietaire': row.get('proprietaire_site'),

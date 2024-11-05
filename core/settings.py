@@ -170,3 +170,47 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 logger = logging.getLogger()
+
+
+
+
+
+
+
+
+
+
+
+
+# # Database
+# # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+# DB_ENGINE   = os.getenv('DB_ENGINE', 'mysqlclient') 
+# DB_USERNAME = os.getenv('DB_USERNAME', 'root')
+# DB_PASS     = os.getenv('DB_PASS', 'root')
+# DB_HOST     = os.getenv('DB_HOST', 'localhost')  
+# DB_PORT     = os.getenv('DB_PORT', '3306')  
+# DB_NAME     = os.getenv('DB_NAME', 'sites')
+
+
+# if DB_ENGINE and DB_NAME and DB_USERNAME:
+#     DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  # Utilisez simplement 'mysql'
+#         'NAME': DB_NAME,
+#         'USER': DB_USERNAME,
+#         'PASSWORD': DB_PASS,
+#         'HOST': DB_HOST,
+#         'PORT': DB_PORT,
+#     }
+# }
+
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': 'db.sqlite3',
+#         }
+#     }
+
+# # Password validation

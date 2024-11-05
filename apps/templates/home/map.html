@@ -5,9 +5,9 @@
 
 {% block stylesheets %}
 {% comment %} <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" /> {% endcomment %}
-<link rel="stylesheet" href="{% static 'assets/css/leaflet.css' %}" />
-{% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" /> {% endcomment %}
-<link rel="stylesheet" href="{% static 'assets/css/Control.FullScreen.css' %}" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
+<link rel="stylesheet" href="/static/assets/css/leaflet.css" />
+{% comment %} <link rel="stylesheet" href="/static/assets/css/FullScreen.css" /> {% endcomment %}
 <style>
     .map-canvas {
         height: 100vh;
@@ -50,10 +50,11 @@
 {% endblock content %}
 
 {% block javascripts %}
-{% comment %} <script src="{% static 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js' %}"></script> {% endcomment %}
-<script src="{% static '{% static 'assets/js/leaflet.js' %}' %}"></script>
-<script src="{% static 'assets/js/Control.FullScreen.min.js' %}"></script>
+{% comment %} <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> {% endcomment %}
+<script src="/static/assets/js/leaflet.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
+{% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
 <script>
     window.onload = function() {
         var mapElement = document.getElementById('carteSite');

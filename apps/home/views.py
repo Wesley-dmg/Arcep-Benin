@@ -916,8 +916,8 @@ def file_upload_view(request):
                 handle_message(request, error)
             handle_message(request, "Certaines lignes n'ont pas pu être importées. Consultez les messages d'erreur.")
         else:
-            handle_message(request, "Fichier téléversé et traité avec succès.")
-
+            handle_message(request, "Fichier téléversé et traité avec succès.") 
+            return redirect('home:home')
     except ValidationError as ve:
         handle_message(request, f"Erreur lors du traitement du fichier : {ve}")
         logger.error(f"Erreur lors du traitement du fichier {uploaded_file.name}: {ve}")
