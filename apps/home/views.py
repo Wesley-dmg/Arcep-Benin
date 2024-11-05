@@ -926,4 +926,3 @@ def file_upload_view(request):
         logger.exception(f"Erreur imprévue lors du téléversement ou du traitement du fichier {uploaded_file.name}: {e}")
 
     return redirect('home:file_upload')
-

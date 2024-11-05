@@ -76,8 +76,10 @@
 
         // Parcours des sites pour ajouter les marqueurs
         {% for site in sites %}
-        var latitude = parseFloat("{{ site.latitude }}");
-        var longitude = parseFloat("{{ site.longitude }}");
+        // Correction dans la génération des marqueurs
+        var latitude = parseFloat("{{ site.latitude|escapejs}}.replace:',','.'");
+        var longitude = parseFloat("{{ site.longitude|escapejs}}.replace:',','.'");
+
         var siteNom = "{{ site.nom|escapejs }}";
         var OperateurNom = "{{ site.operateur.nom|escapejs }}";
         var siteLocalite = "{{ site.localite.localite|escapejs }}";
@@ -97,7 +99,7 @@
                     markerColor = 'red';
                 {% endif %}
             {% else %}
-                markerColor = 'gray';
+                markerColor = 'grey';
             {% endif %}
 
             var marker = L.circleMarker([latitude, longitude], {
