@@ -167,13 +167,30 @@ def validate_latitude_longitude(lat, long):
     return lat, long
 
 # Validation de la date
+# def validate_date(date_value, formats=["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"]):
+#     # Vérification si la date est déjà un objet Timestamp (pd.Timestamp)
+#     if isinstance(date_value, pd.Timestamp):
+#         return date_value  
+    
+#     for fmt in formats:
+#         try:
+#             return datetime.strptime(date_value, fmt)
+#         except ValueError:
+#             continue
+#     raise ValidationError(f"Format de date incorrect: {date_value}")
+
+
 def validate_date(date_value, formats=["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"]):
+    if isinstance(date_value, pd.Timestamp):
+        return date_value
+    
     for fmt in formats:
         try:
-            return datetime.strptime(date_value, fmt)
+            return pd.Timestamp(datetime.strptime(date_value, fmt)) 
         except ValueError:
             continue
     raise ValidationError(f"Format de date incorrect: {date_value}")
+
 
 # Récupérer ou créer un objet clé étrangère
 def get_or_create_foreign_key(model_class, field_name, value):
@@ -250,80 +267,160 @@ def get_or_create_emplacement(row):
     emplacement, created = Emplacement.objects.get_or_create(type_emplacement=type_emplacement)
     return emplacement
 
-# Traitement du fichier Excel
+# # Traitement du fichier Excel
+# def process_excel_file(uploaded_file):
+#     """
+#     Traite un fichier Excel pour créer ou mettre à jour des objets 'Site'.
+
+#     Args:
+#         uploaded_file: Fichier Excel téléchargé par l'utilisateur.
+
+#     Returns:
+#         errors: Liste des erreurs survenues lors du traitement du fichier.
+#     """
+
+#     errors = []
+#     try:
+#         df = pd.read_excel(uploaded_file, engine="openpyxl", header=0)
+
+        
+#         # Log pour afficher les noms de colonnes avant normalisation
+#         logger.debug(f"Colonnes dans le fichier Excel avant normalisation : {df.columns.tolist()}")
+    
+#         # Normalisation des colonnes
+#         df.columns = [normalize_column_name(col) for col in df.columns]
+#         df = df.fillna('')  # Remplir les NaN avec des chaînes vides
+        
+#         # print(df.columns)  # Vérifie que toutes les colonnes sont présentes 
+#         # pdb.set_trace()  # Met le point d'arrêt ici
+        
+#         for index, row in df.iterrows():
+#             # Nettoyer les valeurs de la ligne
+#             row = clean_row_values(row)
+
+#             # Log des informations de la ligne
+#             logger.debug(f"Traitement de la ligne {index + 1}: {row}")
+
+#             try:
+
+#                 localite_instance = get_or_create_localite(row)
+                
+#                 # print(localite_instance)  # Vérifie que toutes les colonnes sont présentes 
+#                 # pdb.set_trace()  # Met le point d'arrêt ici
+                
+#                 # Appel conditionnel pour obtenir l'emplacement
+#                 emplacement_instance = get_or_create_emplacement(row)
+        
+#                 operateur_instance, _ = get_or_create_foreign_key(Operateur, 'nom', row.get('operateur'))
+                
+#                 # Validation des coordonnées et des autres champs
+#                 latitude, longitude = validate_latitude_longitude(row.get('latitude_du_candidat'), row.get('longitude_du_candidat'))
+                
+#                 date_autorisation = validate_date(row.get('date_autorisation')) if row.get('date_autorisation') else None
+                
+#                 date_mise_en_service = validate_date(row.get('date_mise_en_service')) if row.get('date_mise_en_service') else None
+
+#                 # Récupérer la valeur de camouflage et gérer les valeurs None
+#                 camouflage_value = row.get('camouflage', '')
+
+#                 if camouflage_value:  # Vérifie si camouflage_value n'est pas None ou vide
+#                     camouflage_value = camouflage_value.replace('\xa0', '').strip().lower()
+#                 else:
+#                     camouflage_value = ''  # Si c'est None, le traiter comme une chaîne vide
+                    
+#                 # Conversion de la valeur en booléen
+#                 if camouflage_value in ['oui', 'yes', 'true']:
+#                     camouflage = True
+#                 elif camouflage_value in ['non', 'no', 'false']:
+#                     camouflage = False
+#                 else:
+#                     camouflage = False
+
+#                 # Préparation des données du site
+#                 site_data = {
+#                     'nom': row.get('id_du_site', f"Site_{index + 1}"),
+#                     'localite': localite_instance,
+#                     'latitude': latitude,
+#                     'longitude': longitude,
+#                     'avis_arcep': row.get('avis_de_larcep_benin'),
+#                     'observation': row.get('observations'),
+#                     'emplacement': emplacement_instance,
+#                     'type_pylone': row.get('type_pylone'),
+#                     'hauteur_antenne': row.get('hauteur_antenne'), 
+#                     'camouflage': camouflage ,
+#                     'description': row.get('description'),
+#                     'proprietaire': row.get('proprietaire_site'),
+#                     'operateur': operateur_instance,
+#                     'num_dossier': row.get('n_dossier'),
+#                     'ref_courrier': row.get('ref_courrier'),
+#                     'date_autorisation': date_autorisation,
+#                     'date_mise_en_service': date_mise_en_service
+#                 }
+
+#                 # Filtrage des données pour retirer les champs None
+#                 site_data_filtered = {key: value for key, value in site_data.items() if value is not None}
+
+#                 # Création ou mise à jour du site
+#                 Site.objects.update_or_create(nom=site_data_filtered['nom'], defaults=site_data_filtered)
+#                 logger.info(f"Site '{site_data_filtered['nom']}' créé/mis à jour avec succès.")
+                
+#             except ValidationError as ve:
+#                 logger.warning(f"Erreur à la ligne {index + 1}: {ve}")
+#                 errors.append(f"Ligne {index + 1}: {ve}")
+#             except Exception as e:
+#                 logger.error(f"Erreur inattendue à la ligne {index + 1}: {e}")
+#                 errors.append(f"Ligne {index + 1}: {e}")
+
+#     except Exception as e:
+#         logger.error(f"Erreur lors du traitement du fichier Excel: {e}")
+#         raise ValidationError(f"Erreur lors du traitement du fichier Excel: {e}")
+
+#     return errors
+
+
 def process_excel_file(uploaded_file):
-    """
-    Traite un fichier Excel pour créer ou mettre à jour des objets 'Site'.
-
-    Args:
-        uploaded_file: Fichier Excel téléchargé par l'utilisateur.
-
-    Returns:
-        errors: Liste des erreurs survenues lors du traitement du fichier.
-    """
-
     errors = []
     try:
         df = pd.read_excel(uploaded_file, engine="openpyxl", header=0)
-
-        
-        # Log pour afficher les noms de colonnes avant normalisation
         logger.debug(f"Colonnes dans le fichier Excel avant normalisation : {df.columns.tolist()}")
     
-        # Normalisation des colonnes
         df.columns = [normalize_column_name(col) for col in df.columns]
-        df = df.fillna('')  # Remplir les NaN avec des chaînes vides
-        
-        # print(df.columns)  # Vérifie que toutes les colonnes sont présentes 
-        # pdb.set_trace()  # Met le point d'arrêt ici
+        df = df.fillna('')  # Utilise None pour les valeurs manquantes
         
         for index, row in df.iterrows():
-            # Nettoyer les valeurs de la ligne
             row = clean_row_values(row)
-
-            # Log des informations de la ligne
             logger.debug(f"Traitement de la ligne {index + 1}: {row}")
 
             try:
-
                 localite_instance = get_or_create_localite(row)
-                
-                # print(localite_instance)  # Vérifie que toutes les colonnes sont présentes 
-                # pdb.set_trace()  # Met le point d'arrêt ici
-                
-                # Appel conditionnel pour obtenir l'emplacement
                 emplacement_instance = get_or_create_emplacement(row)
-        
                 operateur_instance, _ = get_or_create_foreign_key(Operateur, 'nom', row.get('operateur'))
                 
-                # Validation des coordonnées et des autres champs
                 latitude, longitude = validate_latitude_longitude(row.get('latitude_du_candidat'), row.get('longitude_du_candidat'))
-                hauteur_antenne = row.get('hauteur_antenne')
-                
-                latitude = clean_numeric_value(row.get('latitude_du_candidat'))
-                longitude = clean_numeric_value(row.get('longitude_du_candidat'))
-                hauteur_antenne = clean_numeric_value(row.get('hauteur_antenne'))
 
+                # Log pour vérifier la date
+                logger.debug(f"Date autorisation brute pour la ligne {index + 1}: {row.get('date_autorisation')}")
+                
                 date_autorisation = validate_date(row.get('date_autorisation')) if row.get('date_autorisation') else None
                 date_mise_en_service = validate_date(row.get('date_mise_en_service')) if row.get('date_mise_en_service') else None
+                
+                # Dictionnaire de correspondance pour les valeurs booléennes possibles
+                camouflage_mapping = {
+                    'oui': True, 'yes': True, 'true': True, '1': True,
+                    'non': False, 'no': False, 'false': False, '': False, '0': False
+                }
 
-                # Récupérer la valeur de camouflage et gérer les valeurs None
-                camouflage_value = row.get('camouflage', '')
+                # Obtenir la valeur de 'camouflage' dans la ligne (si None, utilise une chaîne vide '')
+                camouflage_value = row.get('camouflage', '') 
 
-                if camouflage_value:  # Vérifie si camouflage_value n'est pas None ou vide
-                    camouflage_value = camouflage_value.replace('\xa0', '').strip().lower()
-                else:
-                    camouflage_value = ''  # Si c'est None, le traiter comme une chaîne vide
-                    
-                # Conversion de la valeur en booléen
-                if camouflage_value in ['oui', 'yes', 'true']:
-                    camouflage = True
-                elif camouflage_value in ['non', 'no', 'false']:
-                    camouflage = False
-                else:
-                    camouflage = False
+                # Assurer qu'il s'agit d'une chaîne de caractères et nettoyer les espaces inutiles
+                camouflage_value = str(camouflage_value).replace('\xa0', '').strip().lower()
 
-                # Préparation des données du site
+                # Mapper la valeur selon le dictionnaire ou utiliser False par défaut si la clé est absente
+                camouflage = camouflage_mapping.get(camouflage_value, False)
+
+
+                
                 site_data = {
                     'nom': row.get('id_du_site', f"Site_{index + 1}"),
                     'localite': localite_instance,
@@ -333,9 +430,8 @@ def process_excel_file(uploaded_file):
                     'observation': row.get('observations'),
                     'emplacement': emplacement_instance,
                     'type_pylone': row.get('type_pylone'),
-                    # 'hauteur_antenne': row.get('hauteur_antenne'),
-                    'hauteur_antenne': hauteur_antenne,
-                    'camouflage': camouflage ,
+                    'hauteur_antenne': row.get('hauteur_antenne'),
+                    'camouflage': camouflage,
                     'description': row.get('description'),
                     'proprietaire': row.get('proprietaire_site'),
                     'operateur': operateur_instance,
@@ -344,23 +440,21 @@ def process_excel_file(uploaded_file):
                     'date_autorisation': date_autorisation,
                     'date_mise_en_service': date_mise_en_service
                 }
-
-                # Filtrage des données pour retirer les champs None
                 site_data_filtered = {key: value for key, value in site_data.items() if value is not None}
-
-                # Création ou mise à jour du site
+                
                 Site.objects.update_or_create(nom=site_data_filtered['nom'], defaults=site_data_filtered)
                 logger.info(f"Site '{site_data_filtered['nom']}' créé/mis à jour avec succès.")
                 
             except ValidationError as ve:
-                logger.warning(f"Erreur à la ligne {index + 1}: {ve}")
+                logger.warning(f"Erreur de validation à la ligne {index + 1}: {ve}")
                 errors.append(f"Ligne {index + 1}: {ve}")
             except Exception as e:
                 logger.error(f"Erreur inattendue à la ligne {index + 1}: {e}")
                 errors.append(f"Ligne {index + 1}: {e}")
-
+                
     except Exception as e:
         logger.error(f"Erreur lors du traitement du fichier Excel: {e}")
         raise ValidationError(f"Erreur lors du traitement du fichier Excel: {e}")
 
     return errors
+

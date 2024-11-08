@@ -35,18 +35,18 @@ def index(request):
         
         for site in sites
     ]
+    
     # Calcul du nombre total de sites
     total_sites = sites.count()
 
     current_year = datetime.now().year
     new_sites_per_month = {month: 0 for month in range(1, 13)}  # Initialise le dictionnaire pour chaque mois
 
-    new_sites = Site.objects.filter(date_mise_en_service__year=current_year)
+    new_sites = Site.objects.filter(date_autorisation__year=current_year)
     for site in new_sites:
-        new_sites_per_month[site.date_mise_en_service.month] += 1
+        if site.date_autorisation: 
+            new_sites_per_month[site.date_autorisation.month] += 1
 
-    # Calcul du total de conformités et du nombre de conformités réussies
-    # total_conformite = Conformite.objects.count()
     total_conforme = Conformite.objects.filter(statut=True).count()
 
     # Calcul du pourcentage de conformité
