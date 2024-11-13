@@ -1,22 +1,22 @@
 # -*- encoding: utf-8 -*-
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Avg, Q
+from django.db.models import Count,Q
 from django.http import JsonResponse
 from django.contrib import messages 
 from datetime import datetime
 from decimal import Decimal
 from .models import *
 import logging
-
-# Importations de utils après les autres
 from .utils import handle_message, process_excel_file, get_communes, get_statistics_data
 
 logger = logging.getLogger(__name__)
 
+@login_required(login_url='authentication:login')
 def custom_page_not_found_view(request, exception):
     return render(request, 'home/page-404.html', status=404)
 
+@login_required(login_url='authentication:login')
 def custom_error_view(request):
     return render(request, 'home/page-500.html', status=500)
 
@@ -82,15 +82,72 @@ def index(request):
 # Vue pour l'affichage des sites sur la carte
 @login_required
 def map_view(request):
-    # Récupère tous les sites avec une latitude et une longitude valides
-    sites = Site.objects.filter(latitude__isnull=False, longitude__isnull=False)
+    # Récupérer les paramètres de filtre
+    departement_id = request.GET.get('departement')
+    # commune_id = request.GET.get('commune')
+    operateur_id = request.GET.get('operateur')
+    conformite_statut = request.GET.get('conformite')
 
-    # Optionnel : Imprimer les détails de chaque site dans la console (à retirer en production)
+    # Charger toutes les options de filtres
+    departements = Departement.objects.all()
+    # communes = Commune.objects.all()
+    operateurs = Operateur.objects.all()
+
+    # Récupérer tous les sites avec leurs relations
+    sites = Site.objects.select_related('operateur', 'localite', 'conformite').all()
+
+    # Appliquer les filtres selon les paramètres reçus
+    if departement_id:
+        sites = sites.filter(localite__commune__departement_id=departement_id)
+    # if commune_id:
+    #     sites = sites.filter(localite__commune_id=commune_id)
+    if operateur_id:
+        sites = sites.filter(operateur_id=operateur_id)
+    if conformite_statut == 'conforme':
+        sites = sites.filter(conformite__statut=True)
+    elif conformite_statut == 'non-conforme':
+        sites = sites.filter(conformite__statut=False)
+
+    # Préparer les données avec la couleur de l'icône pour chaque site
+    sites_data = []
     for site in sites:
-        print(f"Site: {site.id}, {site.nom}, Latitude: {site.latitude}, Longitude: {site.longitude}")
+        # Vérifie si le site a une conformité associée
+        if hasattr(site, 'conformite') and site.conformite is not None:
+            site_conformite_statut = site.conformite.statut
+        else:
+            site_conformite_statut = None
 
-    # Passer les sites au contexte du template
-    context = {'sites': sites}
+        # Détermine la couleur de l'icône en fonction de la conformité
+        if site_conformite_statut is True:
+            icon_color = site.operateur.couleur 
+        elif site_conformite_statut is False:
+            icon_color = 'red'
+        else:
+            icon_color = 'gray'
+
+        # Ajoute les informations de chaque site à `sites_data`
+        sites_data.append({
+            'id': site.id,
+            'nom': site.nom,
+            'latitude': site.latitude,
+            'longitude': site.longitude,
+            'localite': site.localite.localite if site.localite else "",
+            'operateur_nom': site.operateur.nom,
+            'operateur_logo': site.operateur.logo.url if site.operateur.logo else "",
+            'icon_color': icon_color,
+        })
+
+    # Vérifier si c'est une requête AJAX et retourner JSON avec les sites filtrés
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'sites': sites_data})
+
+    # Contexte pour le rendu complet de la page
+    context = {
+        'departements': departements,
+        # 'communes': communes,
+        'operateurs': operateurs,
+        'sites': sites_data,
+    }
     return render(request, 'home/map.html', context)
 
 # Vues CRUD pour les opérateurs
@@ -99,7 +156,8 @@ def map_view(request):
 def operateur_list(request):
     operateurs = Operateur.objects.annotate(
         total_sites=Count('site'),
-        conforming_sites=Count('site__conformite', filter=Q(site__conformite__statut=True))
+        conforming_sites=Count('site__conformite', filter=Q(site__conformite__statut=True)),
+        non_conforming_sites = Count('site__conformite', filter=Q(site__conformite__statut=False))
     )
 
     context = {
@@ -311,7 +369,6 @@ def commune_delete(request, pk):
     return render(request, 'home/commune_delete_confirm.html', context)
 
 # Vues CRUD pour  Localite
-
 # Vues pour ajouter une Localite
 @login_required(login_url='authentication:login')
 def localite_create(request):

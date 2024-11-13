@@ -24,7 +24,6 @@
           </div>
           <div class="col-lg-6 col-5 text-right">
             <a href="{% url 'home:operateur_create' %}" class="btn btn-sm btn-neutral">Ajouter</a>
-            {% comment %} <a href="#" class="btn btn-sm btn-neutral">Filtres</a> {% endcomment %}
           </div>
         </div>
       </div>
@@ -56,6 +55,7 @@
                   <th class="sort text-center">Operateurs</th>
                   <th class="sort text-center">Nombre de sites</th>
                   <th class="text-center">Sites conforme</th>
+                  <th class="text-center">Sites non conforme</th>
                   <th class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -64,7 +64,6 @@
                   <tr>
                     <td scope="row " class="text-center">
                       <div class="media align-items-center justify-content-center">
-                        {% comment %} <img alt="{{ operateur.nom }}" src="/static/assets/img/media/{{ operateur.logo }}" width="18%" class="mr-3" /> {% endcomment %}
                         <span>{{ operateur.nom }}</span>
                       </div>
                     </td>
@@ -73,6 +72,9 @@
                     </td>
                     <td class="text-center">
                       <span>{{ operateur.conforming_sites|default:0 }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span>{{ operateur.non_conforming_sites|default:0 }}</span>
                     </td>
                     <td class="text-center">
                       <a href="{% url 'home:operateur_update' operateur.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>

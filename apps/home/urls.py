@@ -60,6 +60,6 @@ urlpatterns = [
     path('file-upload/', views.file_upload_view, name='file_upload'),
 
     #Cartographie daes  sites   
-    path('maps/', views.map_view, name='map'),
+    path('map/', views.map_view, name='map'),
     
-    ]
+]
