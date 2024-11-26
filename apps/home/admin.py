@@ -1,16 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Operateur,
-    Emplacement,
-    Departement,
-    Commune,
-    Localite,
-    Technologie,
-    Site,
-    Conformite,
-    SiteTechnologie,
-    UploadedFile,
-)
+    Operateur,Emplacement,Departement,Commune,Localite,Technologie,Site,Conformite,SiteTechnologie,UploadedFile,
+    )
 
 @admin.register(Operateur)
 class OperateurAdmin(admin.ModelAdmin):
@@ -81,9 +72,3 @@ class SiteTechnologieAdmin(admin.ModelAdmin):
     list_filter = ('site', 'technologie')
     search_fields = ('site__nom', 'technologie__nom')
     ordering = ('-date_ajout',)
-
-@admin.register(UploadedFile)
-class UploadedFileAdmin(admin.ModelAdmin):
-    list_display = ('file', 'uploaded_at')
-    search_fields = ('file',)
-    ordering = ('-uploaded_at',)

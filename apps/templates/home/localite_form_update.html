@@ -56,31 +56,5 @@
 
 {% endblock %}
 {% block javascripts %}
-  <script>
-    $(document).ready(function () {
-      $('#id_departement').on('change', function () {
-        var departementId = $(this).val();
-        if (departementId) {
-          $.ajax({
-            url: "{% url 'home:get_communes' %}",
-            data: {
-              departement_id: departementId
-            },
-            success: function (data) {
-              var communeSelect = $('#id_commune');
-              communeSelect.empty();
-              communeSelect.append('<option value="">Sélectionner une commune</option>');
-              data.forEach(function (commune) {
-                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
-              });
-            }
-          });
-        } else {
-          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
-        }
-      });
-    });
-  </script>
-
-
+  {% include 'includes/customscripts.html' %}
 {% endblock %}

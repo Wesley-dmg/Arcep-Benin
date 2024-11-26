@@ -1,7 +1,4 @@
 # -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
 
 import os
 from decouple import config
@@ -43,10 +40,30 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
 ROOT_URLCONF = 'core.urls'
 LOGIN_URL = "/login/"  # Route defined in home/urls.py
 LOGIN_REDIRECT_URL = "home"  # Route defined in home/urls.py
 LOGOUT_REDIRECT_URL = "home"  # Route defined in home/urls.py
+
+# Static files (CSS, JavaScript, Images)
+STATIC_ROOT = os.path.join(CORE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+
+# Extra places for collectstatic to find static files.
+STATICFILES_DIRS = (
+    os.path.join(CORE_DIR, 'apps/static'),
+)
+
+import os
+
+MEDIA_URL = '/media/'   
+MEDIA_ROOT = os.path.join(BASE_DIR, 'apps/static/media')    
+
 TEMPLATE_DIR = os.path.join(CORE_DIR, "apps/templates")  # ROOT dir for templates
 
 TEMPLATES = [
@@ -72,24 +89,26 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DB_ENGINE   = os.getenv('DB_ENGINE'   , None)
-DB_USERNAME = os.getenv('DB_USERNAME' , None)
-DB_PASS     = os.getenv('DB_PASS'     , None)
-DB_HOST     = os.getenv('DB_HOST'     , None)
-DB_PORT     = os.getenv('DB_PORT'     , None)
-DB_NAME     = os.getenv('DB_NAME'     , None)
+DB_ENGINE   = os.getenv('DB_ENGINE', 'mysqlclient') 
+DB_USERNAME = os.getenv('DB_USERNAME', None)
+DB_PASS     = os.getenv('DB_PASS', None)
+DB_HOST     = os.getenv('DB_HOST', None)  
+DB_PORT     = os.getenv('DB_PORT', None)  
+DB_NAME     = os.getenv('DB_NAME', None)
+
 
 if DB_ENGINE and DB_NAME and DB_USERNAME:
-    DATABASES = { 
-      'default': {
-        'ENGINE'  : 'django.db.backends.' + DB_ENGINE, 
-        'NAME'    : DB_NAME,
-        'USER'    : DB_USERNAME,
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': DB_NAME,
+        'USER': DB_USERNAME,
         'PASSWORD': DB_PASS,
-        'HOST'    : DB_HOST,
-        'PORT'    : DB_PORT,
-        }, 
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
+}
+
 else:
     DATABASES = {
         'default': {
@@ -97,7 +116,6 @@ else:
             'NAME': 'db.sqlite3',
         }
     }
-
 
 # Password validation
 
@@ -128,20 +146,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-STATIC_ROOT = os.path.join(CORE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-
-# Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (
-    os.path.join(CORE_DIR, 'apps/static'),
-)
-
-MEDIA_URL = './apps/static/media/'
-MEDIA_ROOT =  './apps/static/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+'''
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -172,46 +180,4 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
-
-
-
-
-
-
-
-
-
-
-
-# # Database
-# # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-# DB_ENGINE   = os.getenv('DB_ENGINE', 'mysqlclient') 
-# DB_USERNAME = os.getenv('DB_USERNAME', 'root')
-# DB_PASS     = os.getenv('DB_PASS', 'root')
-# DB_HOST     = os.getenv('DB_HOST', 'localhost')  
-# DB_PORT     = os.getenv('DB_PORT', '3306')  
-# DB_NAME     = os.getenv('DB_NAME', 'sites')
-
-
-# if DB_ENGINE and DB_NAME and DB_USERNAME:
-#     DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',  # Utilisez simplement 'mysql'
-#         'NAME': DB_NAME,
-#         'USER': DB_USERNAME,
-#         'PASSWORD': DB_PASS,
-#         'HOST': DB_HOST,
-#         'PORT': DB_PORT,
-#     }
-# }
-
-# else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': 'db.sqlite3',
-#         }
-#     }
-
-# # Password validation
+'''

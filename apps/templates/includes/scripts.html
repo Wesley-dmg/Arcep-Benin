@@ -1,11 +1,12 @@
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="/static/assets/js/argon.js?v=1.2.0"></script>
+<script src="/static/assets/vendor/js-cookie/js.cookie.js"></script>
 <script src="/static/assets/vendor/jquery/dist/jquery.min.js"></script>
 <script src="/static/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/assets/vendor/js-cookie/js.cookie.js"></script>
 <script src="/static/assets/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
 <script src="/static/assets/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
 <script src="/static/assets/js/argon.js?v=1.2.0"></script>
+<script src="/static/assets/js/argon.js?v=1.2.0"></script>
+{% comment %} <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> {% endcomment %}
+<script src="/static/assets/vendor/select2/dist/js/select2.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
@@ -13,41 +14,61 @@
       alertMessages.forEach(function (alert) {
         alert.style.display = 'none'
       })
-    }, 1500) 
-  })
-    {% if comunes %}
-    
-  
-   
-  //Script JavaScript pour la mise à jour dynamique des communes 
-   const communesByDepartement = 
-    {
-      {% for departement, communes in communes.items %}
-        '{{ departement }}': [
-          {% for commune, commune_display in communes %}
-            { 'value': '{{ commune }}', 'display': '{{ commune_display }}' },
-          {% endfor %}
-        ],
-      {% endfor %}
-    };
+    }, 1300) 
+  })  
+</script>
 
-    document.getElementById('id_departement').addEventListener('change', function() {
-      const departement = this.value;
-      const communesSelect = document.getElementById('id_commune');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('navbar-search-input');
+        const searchResults = document.getElementById('navbar-search-results');
 
-      // Vider les options actuelles
-      while (communesSelect.options.length > 1) {
-        communesSelect.remove(1);
-      }
+        // Fonction de recherche
+        searchInput.addEventListener('input', function () {
+            const query = searchInput.value.trim();
 
-      if (departement in communesByDepartement) {
-        const communes = communesByDepartement[departement];
-        communes.forEach(commune => {
-          const option = new Option(commune.display, commune.value);
-          communesSelect.add(option);
+            if (query.length > 0) {
+                fetch(`/ajax/recherche/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Réinitialise les résultats
+                        searchResults.innerHTML = '';
+                        searchResults.style.display = 'block';
+
+                        if (data.resultats.length > 0) {
+                            data.resultats.forEach(result => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item list-group-item-action';
+                                li.textContent = result.nom;
+                                li.dataset.siteId = result.id;
+
+                                // Clique sur un résultat
+                                li.addEventListener('click', function () {
+                                    window.location.href = `/site/${result.id}/`;
+                                });
+
+                                searchResults.appendChild(li);
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item text-muted';
+                            li.textContent = 'Aucun résultat trouvé.';
+                            searchResults.appendChild(li);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la recherche :', error);
+                    });
+            } else {
+                searchResults.style.display = 'none';
+            }
         });
-      }
-    });
 
-    {% endif %}
-  </script>
+        // Cacher les résultats si on clique en dehors
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+    });
+</script>

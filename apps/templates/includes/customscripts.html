@@ -1,0 +1,76 @@
+<script>
+    $(document).ready(function () {
+      $('#id_departement').on('change', function () {
+        var departementId = $(this).val();
+        if (departementId) {
+          $.ajax({
+            url: "{% url 'home:get_communes' %}",
+            data: {
+              departement_id: departementId
+            },
+            success: function (data) {
+              var communeSelect = $('#id_commune');
+              communeSelect.empty();
+              communeSelect.append('<option value="">Sélectionner une commune</option>');
+              data.forEach(function (commune) {
+                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
+              });
+            }
+          });
+        } else {
+          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
+        }
+      });
+    });
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      $('#id_departement').on('change', function () {
+        var departementId = $(this).val();
+        if (departementId) {
+          $.ajax({
+            url: "{% url 'home:get_communes' %}",
+            data: {
+              departement_id: departementId
+            },
+            success: function (data) {
+              var communeSelect = $('#id_commune');
+              communeSelect.empty();
+              communeSelect.append('<option value="">Sélectionner une commune</option>');
+              data.forEach(function (commune) {
+                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
+              });
+            }
+          });
+        } else {
+          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
+        }
+      });
+    });
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      $('#searchBar').on('input', function () {
+        var query = $(this).val()
+        $.ajax({
+          url: "{% url 'home:localite_create' %}",
+          data: {
+            q: query
+          },
+          success: function (data) {
+            var localiteList = $('#localiteList')
+            localiteList.empty()
+            if (data.length > 0) {
+              data.forEach(function (item) {
+                localiteList.append('<li class="list-group-item d-flex justify-content-between align-items-center">' + '<div><strong>' + item.localite.toUpperCase() + '</strong> - ' + item.commune + ' - ' + item.departement + '</div>' + '<div>' + '<a href="/localite/update/' + item.id + '" class="btn btn-sm btn-ouprimary">Modifier</a> ' + '<a href="/localite/delete/' + item.id + '" class="btn btn-sm btn-oudanger">Supprimer</a>' + '</div></li>')
+              })
+            } else {
+              localiteList.append('<li class="list-group-item">Aucun résultat trouvé</li>')
+            }
+          }
+        })
+      })
+    })
+  </script>

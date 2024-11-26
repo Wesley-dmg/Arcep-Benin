@@ -38,9 +38,6 @@ class Departement(models.Model):
     
 class Commune(models.Model):
     """Modèle représentant une commune."""
-    # The line `# nom = models.CharField(max_length=255, verbose_name="Nom de la commune")` is a
-    # commented-out line in the `Commune` model class definition. This means that this line of code is
-    # not active or used in the model definition.
     nom = models.CharField(max_length=255, verbose_name="Nom de la commune")
     departement = models.ForeignKey(Departement, on_delete=models.CASCADE, verbose_name="Département")
     
@@ -67,46 +64,11 @@ class Localite(models.Model):
 # Modèle pour les Technologies
 class Technologie(models.Model):
     TECHNOLOGY_CHOICES = [
-        ('5G-MMWAVE', '5G mmWave'),
-        ('5G-NR', '5G NR'),
-        ('5G-SUB_6', '5G Sub-6 GHz'),
-        ('ADSL', 'ADSL'),
-        ('BLUETOOTH-4', 'Bluetooth 4.0 (LE)'),
-        ('BLUETOOTH-5', 'Bluetooth 5.0'),
-        ('CABLE-DOCSIS', 'Cable DOCSIS'),
-        ('EDGE', 'EDGE'),
-        ('FEMTOCELL', 'Femtocell'),
-        ('FTTH-EPON', 'FTTH EPON'),
-        ('FTTH-GPON', 'FTTH GPON'),
-        ('GPRS', 'GPRS'),
-        ('GSM-1800', 'GSM 1800'),
-        ('GSM-900', 'GSM 900'),
-        ('HSPA', 'HSPA'),
-        ('HSPA-PLUS', 'HSPA+'),
-        ('LORA', 'LoRa'),
-        ('LORAWAN', 'LoRaWAN'),
-        ('LTE-1800', 'LTE 1800'),
-        ('LTE-2600', 'LTE 2600'),
-        ('LTE-800', 'LTE 800'),
-        ('LTE-A', 'LTE-A'),
-        ('LTE-M', 'LTE-M'),
-        ('MICRO-CELL', 'Micro Cell'),
-        ('MICROWAVE-PTP', 'Microwave Point-to-Point'),
-        ('MICROWAVE-PTMP', 'Microwave Point-to-Multipoint'),
-        ('MPLS', 'MPLS'),
-        ('NB-IOT', 'NB-IoT'),
-        ('P25', 'P25'),
-        ('PICO-CELL', 'Pico Cell'),
-        ('SAT-VSAT', 'Satellite VSAT'),
-        ('SIGFOX', 'Sigfox'),
-        ('TETRA', 'TETRA'),
-        ('UMTS-2100', 'UMTS 2100'),
-        ('UMTS-900', 'UMTS 900'),
-        ('VDSL', 'VDSL'),
-        ('VPN', 'VPN'),
-        ('WIFI', 'Wi-Fi'),
-        ('Z-WAVE', 'Z-Wave'),
-        ('ZIGBEE', 'Zigbee'),
+        ('2G', '2G'),
+        ('3G', '3G'),
+        ('4G', '2G'),
+        ('5G', '5G'),
+        
     ]
     
     nom = models.CharField(max_length=255, choices=TECHNOLOGY_CHOICES, verbose_name="Nom de la technologie")
@@ -136,7 +98,7 @@ class Site(models.Model):
     localite = models.ForeignKey(Localite, blank=True, null=True, on_delete=models.PROTECT, verbose_name="Localité")
     technologies = models.ManyToManyField(Technologie, through='SiteTechnologie')
     num_dossier = models.CharField(max_length=255, blank=True, null=True, verbose_name="Numéro de dossier")
-    # contact_proprietaire = models.CharField(max_length=255, null=True, blank=True)
+    contact_proprietaire = models.CharField(max_length=255, null=True, blank=True)
     add_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
     
     ref_courrier = models.CharField(max_length=255, blank=True, null=True, verbose_name="Référence de courrier")

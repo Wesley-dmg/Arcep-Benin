@@ -5,7 +5,9 @@ from django.http import JsonResponse
 from django.db import IntegrityError
 from django.contrib import messages 
 from datetime import datetime
-from django.apps import apps
+
+from django.shortcuts import render
+# from django.apps import apps
 from .models import *
 import pandas as pd
 import unicodedata
@@ -326,3 +328,62 @@ def process_excel_file(uploaded_file):
         raise ValidationError(f"Erreur lors du traitement du fichier Excel: {e}")
 
     return errors
+
+def get_filtered_sites(departements=None, communes=None, operateurs=None, conformite=None):
+    """
+    Récupère les sites filtrés selon les critères spécifiés.
+
+    Args:
+        departements (list): Liste des IDs de départements.
+        communes (list): Liste des IDs de communes.
+        operateurs (list): Liste des IDs d'opérateurs.
+        conformite (list): Liste des statuts de conformité (e.g., ['conforme', 'non-conforme', 'sans-rapport']).
+
+    Returns:
+        QuerySet: Les sites filtrés.
+    """
+    sites = Site.objects.select_related('operateur', 'localite', 'conformite').all()
+
+    if departements:
+        sites = sites.filter(localite__commune__departement_id__in=departements)
+    if communes:
+        sites = sites.filter(localite__commune_id__in=communes)
+    if operateurs:
+        sites = sites.filter(operateur_id__in=operateurs)
+    if conformite:
+        if 'conforme' in conformite:
+            sites = sites.filter(conformite__statut=True)
+        if 'non-conforme' in conformite:
+            sites = sites.filter(conformite__statut=False)
+        if 'sans-rapport' in conformite:
+            sites = sites.filter(conformite__isnull=True)
+
+    return sites
+
+def recherche_ajax(request):
+    query = request.GET.get('q', '')
+    resultats = []
+
+    if query:
+        sites = Site.objects.filter(
+            Q(nom__icontains=query) |
+            Q(description__icontains=query) |
+            Q(proprietaire__icontains=query) |
+            Q(operateur__nom__icontains=query) |
+            Q(localite__localite__icontains=query) |
+            Q(localite__commune__nom__icontains=query) |
+            Q(localite__commune__departement__nom__icontains=query)
+        ).distinct()
+
+        resultats = [
+            {
+                'id': site.id,
+                'nom': site.nom,
+                'description': site.description,
+                'localite': str(site.localite),
+                'operateur': site.operateur.nom,
+            } for site in sites
+        ]
+
+    return JsonResponse({'resultats': resultats})
+

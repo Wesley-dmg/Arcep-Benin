@@ -3,15 +3,19 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <!-- Search form -->
       <form class="navbar-search navbar-search-light form-inline mr-sm-3" id="navbar-search-main">
-        <div class="form-group mb-0">
+        <div class="form-group mb-0" style="position: relative;">
           <div class="input-group input-group-alternative input-group-merge">
             <div class="input-group-prepend">
-              <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
             </div>
-            <input class="form-control" placeholder="Recherche ..." type="text" />
+            <input id="navbar-search-input" class="form-control" placeholder="Recherche ..." type="text" autocomplete="off"/>
           </div>
+          <!-- Conteneur pour les résultats -->
+          <ul id="navbar-search-results" class="list-group" style="position: absolute; top: 100%; left: 0;width: 100%; z-index: 1050; background-color: white; border: 1px solid #ccc; display: none;max-height: 200px;overflow-y: auto;padding: 0;list-style: none;"></ul>
         </div>
-        <button type="button" class="close" data-action="search-close" data-target="#navbar-search-main" aria-label="Close"><span aria-hidden="true">×</span></button>
+        <button type="button" class="close" data-action="search-close"data-target="#navbar-search-main" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
       </form>
       <!-- Navbar links -->
       <ul class="navbar-nav align-items-center  ml-md-auto ">

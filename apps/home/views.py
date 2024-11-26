@@ -1,4 +1,6 @@
 # -*- encoding: utf-8 -*-
+import json
+import os
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count,Q
@@ -6,9 +8,11 @@ from django.http import JsonResponse
 from django.contrib import messages 
 from datetime import datetime
 from decimal import Decimal
+
+from core import settings
 from .models import *
 import logging
-from .utils import handle_message, process_excel_file, get_communes, get_statistics_data
+from .utils import handle_message, process_excel_file, get_communes, get_statistics_data,get_filtered_sites
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +23,6 @@ def custom_page_not_found_view(request, exception):
 @login_required(login_url='authentication:login')
 def custom_error_view(request):
     return render(request, 'home/page-500.html', status=500)
-
 
 #Vue dashbord
 @login_required(login_url='authentication:login')
@@ -79,79 +82,75 @@ def index(request):
 
     return render(request, 'home/index.html', context)
 
-# Vue pour l'affichage des sites sur la carte
 @login_required
 def map_view(request):
-    # Récupérer les paramètres de filtre
-    departement_id = request.GET.get('departement')
-    # commune_id = request.GET.get('commune')
-    operateur_id = request.GET.get('operateur')
-    conformite_statut = request.GET.get('conformite')
+    # Récupère les paramètres de l'URL
+    departements = [int(dep) for dep in request.GET.getlist('departement') if dep.isdigit()]
+    communes = [int(com) for com in request.GET.getlist('commune') if com.isdigit()]
+    operateurs = [int(op) for op in request.GET.getlist('operateur') if op.isdigit()]
+    conformite = request.GET.getlist('conformite')
 
-    # Charger toutes les options de filtres
-    departements = Departement.objects.all()
-    # communes = Commune.objects.all()
-    operateurs = Operateur.objects.all()
+    # Appliquer les filtres en appelant la fonction dédiée
+    sites = get_filtered_sites(departements, communes, operateurs, conformite)
 
-    # Récupérer tous les sites avec leurs relations
-    sites = Site.objects.select_related('operateur', 'localite', 'conformite').all()
-
-    # Appliquer les filtres selon les paramètres reçus
-    if departement_id:
-        sites = sites.filter(localite__commune__departement_id=departement_id)
-    # if commune_id:
-    #     sites = sites.filter(localite__commune_id=commune_id)
-    if operateur_id:
-        sites = sites.filter(operateur_id=operateur_id)
-    if conformite_statut == 'conforme':
-        sites = sites.filter(conformite__statut=True)
-    elif conformite_statut == 'non-conforme':
-        sites = sites.filter(conformite__statut=False)
-
-    # Préparer les données avec la couleur de l'icône pour chaque site
+    # Préparer les données pour l'affichage
     sites_data = []
+
     for site in sites:
-        # Vérifie si le site a une conformité associée
-        if hasattr(site, 'conformite') and site.conformite is not None:
-            site_conformite_statut = site.conformite.statut
-        else:
-            site_conformite_statut = None
+         # Vérifie si le site a une conformité associée
+         if hasattr(site, 'conformite') and site.conformite is not None:
+             site_conformite_statut = site.conformite.statut
+         else:
+             site_conformite_statut = None
 
-        # Détermine la couleur de l'icône en fonction de la conformité
-        if site_conformite_statut is True:
-            icon_color = site.operateur.couleur 
-        elif site_conformite_statut is False:
-            icon_color = 'red'
-        else:
-            icon_color = 'gray'
+         # Détermine la couleur de l'icône en fonction de la conformité
+         if site_conformite_statut is True:
+             icon_color = site.operateur.couleur 
+         elif site_conformite_statut is False:
+             icon_color = 'red'
+         else:
+             icon_color = 'grey'
 
-        # Ajoute les informations de chaque site à `sites_data`
-        sites_data.append({
-            'id': site.id,
-            'nom': site.nom,
-            'latitude': site.latitude,
-            'longitude': site.longitude,
-            'localite': site.localite.localite if site.localite else "",
-            'operateur_nom': site.operateur.nom,
-            'operateur_logo': site.operateur.logo.url if site.operateur.logo else "",
-            'icon_color': icon_color,
+         # Ajoute les informations de chaque site à `sites_data`
+         sites_data.append({
+             'id': site.id,
+             'nom': site.nom,
+             'latitude': site.latitude,
+             'longitude': site.longitude,
+             'localite': site.localite.localite if site.localite else "",
+             'operateur_nom': site.operateur.nom,
+             'operateur_logo': site.operateur.logo.url if site.operateur.logo else '/static/assets/img/brand/arcep.png',
+             'icon_color': icon_color,
         })
 
-    # Vérifier si c'est une requête AJAX et retourner JSON avec les sites filtrés
+   
+#   # Vérifier si c'est une requête AJAX et retourner les données JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'sites': sites_data})
 
-    # Contexte pour le rendu complet de la page
+    # Charger les options pour les filtres
+    departements_list = Departement.objects.all()
+    operateurs_list = Operateur.objects.all()
+
+    # Contexte pour la page
     context = {
-        'departements': departements,
-        # 'communes': communes,
-        'operateurs': operateurs,
+        'departements': departements_list,
+        'operateurs': operateurs_list,
         'sites': sites_data,
     }
     return render(request, 'home/map.html', context)
 
+@login_required(login_url='authentication:login')
+def get_geojson(request, geojson_type):
+    file_path = os.path.join(settings.BASE_DIR, 'static/geojson', f'BENIN_{geojson_type.upper()}.json')
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        return JsonResponse(data)
+    except FileNotFoundError:
+        return JsonResponse({'error': 'Fichier GeoJSON introuvable'}, status=404)
+
 # Vues CRUD pour les opérateurs
-# Listes des opérateurs
 @login_required(login_url='authentication:login')
 def operateur_list(request):
     operateurs = Operateur.objects.annotate(
@@ -242,7 +241,6 @@ def operateur_delete(request, pk):
     return render(request, 'home/operateur_delete_confirm.html', context)
 
 # Vues CRUD Emplacements
-# Vues ajout et liste des emplacements
 @login_required(login_url='authentication:login')
 def emplacement_create(request):
     if request.method == 'POST':
@@ -470,7 +468,6 @@ def localite_delete(request, pk):
     return render(request, 'home/localite_delete_confirm.html', context)
 
 # Vues pour  CRUD les sites
-# Vue pour lister les sites
 @login_required(login_url='authentication:login')
 def site_list(request):
     if ids := request.POST.getlist('ids'):
@@ -793,8 +790,7 @@ def technologie_delete(request, pk):
     context = {'technologie': technologie}
     return render(request, 'home/technologie_confirm_delete.html', context)
 
-# Vues CRUD pour les  conformité et les rapports d'analyse 
-# Vues pour ajouter les  conformités et les rapports d'analyse 
+# Vues CRUD pour les  conformité et les rapports d'analyse
 @login_required(login_url='authentication:login')
 def add_conformite(request, site_id):
     current_site = get_object_or_404(Site, id=site_id)

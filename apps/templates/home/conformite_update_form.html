@@ -99,8 +99,6 @@
 
               <!-- Section 1 : Conformité -->
               <div class="section active" id="section1">
-                {% comment %} <div class="section-title text-center">Rapport de conformité</div> {% endcomment %}
-
                 <div class="form-group">
                   <label for="rapport">Rapport de conformité (PDF)</label>
                   <input type="file" id="rapport" name="rapport" class="form-control" {% if conformite.rapport %} value="{{ conformite.rapport}}" {% endif %}>
@@ -131,8 +129,6 @@
 
               <!-- Section 2 : Informations sur le site -->
               <div class="section" id="section2">
-                {% comment %} <div class="section-title text-center">Rapport d'analyse</div> {% endcomment %}
-
                 <div class="form-group">
                   <label for="ref_courrier">Référence de courrier</label>
                   <input type="text" id="ref_courrier" name="ref_courrier" class="form-control" value="{{ current_site.ref_courrier }}">

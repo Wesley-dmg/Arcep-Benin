@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 from django.urls import path
 from apps.home import views
+from apps.home.utils import recherche_ajax
 
 app_name = "home"
 
@@ -52,14 +53,12 @@ urlpatterns = [
     path('conformite/delete/<int:site_id>/', views.delete_conformite, name='delete_conformite'),
 
     path('statistics/', views.statistics, name='statistics'),
-    path('statistics/data/', views.get_statistics_data, name='get_statistics_data'),
-    
-    path('get_communes/', views.get_communes, name='get_communes'),     
+    path('statistics/data/', views.get_statistics_data, name='get_statistics_data'),     
     
     # File Upload URLs
     path('file-upload/', views.file_upload_view, name='file_upload'),
 
     #Cartographie daes  sites   
     path('map/', views.map_view, name='map'),
-    
+    path('ajax/recherche/', recherche_ajax, name='recherche_ajax'),
 ]
