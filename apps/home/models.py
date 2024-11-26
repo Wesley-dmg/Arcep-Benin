@@ -38,7 +38,7 @@ class Departement(models.Model):
     
 class Commune(models.Model):
     """Modèle représentant une commune."""
-    nom = models.CharField(max_length=255, verbose_name="Nom de la commune")
+    nom = models.CharField(max_length=255, unique=True, verbose_name="Nom de la commune")
     departement = models.ForeignKey(Departement, on_delete=models.CASCADE, verbose_name="Département")
     
     def __str__(self):
@@ -47,7 +47,7 @@ class Commune(models.Model):
 # Modèle pour les Localité
 class Localite(models.Model):
     commune = models.ForeignKey(Commune, on_delete=models.CASCADE, verbose_name="Commune")
-    localite = models.CharField(max_length=255, verbose_name="Localité")
+    localite = models.CharField(max_length=255, unique=True, verbose_name="Localité")
 
     def clean(self):
         super().clean()
@@ -83,7 +83,7 @@ class Technologie(models.Model):
 
 # Modèle pour les sites
 class Site(models.Model):
-    nom = models.CharField(max_length=255, blank=False, null=False, verbose_name="Nom du site")
+    nom = models.CharField(max_length=255, unique=True, blank=False, null=False, verbose_name="Nom du site")
     photo = models.ImageField(upload_to='Sites/', blank=True, null=True, verbose_name="Photo du site")
     latitude = models.DecimalField(max_digits=15, decimal_places=12, blank=True, null=True, verbose_name="Latitude")
     longitude = models.DecimalField(max_digits=15, decimal_places=12, blank=True, null=True, verbose_name="Longitude")

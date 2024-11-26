@@ -84,60 +84,58 @@ def index(request):
 
 @login_required
 def map_view(request):
-    # Récupère les paramètres de l'URL
+    # Récupère les paramètres de l'URL pour les filtres
     departements = [int(dep) for dep in request.GET.getlist('departement') if dep.isdigit()]
     communes = [int(com) for com in request.GET.getlist('commune') if com.isdigit()]
     operateurs = [int(op) for op in request.GET.getlist('operateur') if op.isdigit()]
     conformite = request.GET.getlist('conformite')
 
-    # Appliquer les filtres en appelant la fonction dédiée
-    sites = get_filtered_sites(departements, communes, operateurs, conformite)
+    # Si des filtres sont fournis, appliquez-les
+    if departements or communes or operateurs or conformite:
+        sites = get_filtered_sites(departements, communes, operateurs, conformite)
+    else:
+        # Sinon, récupère tous les sites
+        sites = Site.objects.select_related('operateur', 'localite', 'conformite').all()
 
-    # Préparer les données pour l'affichage
+    # Préparer les données des sites
     sites_data = []
-
     for site in sites:
-         # Vérifie si le site a une conformité associée
-         if hasattr(site, 'conformite') and site.conformite is not None:
-             site_conformite_statut = site.conformite.statut
-         else:
-             site_conformite_statut = None
+        if hasattr(site, 'conformite') and site.conformite is not None:
+            site_conformite_statut = site.conformite.statut
+        else:
+            site_conformite_statut = None
 
-         # Détermine la couleur de l'icône en fonction de la conformité
-         if site_conformite_statut is True:
-             icon_color = site.operateur.couleur 
-         elif site_conformite_statut is False:
-             icon_color = 'red'
-         else:
-             icon_color = 'grey'
+        # Détermine la couleur de l'icône en fonction de la conformité
+        if site_conformite_statut is True:
+            icon_color = site.operateur.couleur
+        elif site_conformite_statut is False:
+            icon_color = 'red'
+        else:
+            icon_color = 'grey'
 
-         # Ajoute les informations de chaque site à `sites_data`
-         sites_data.append({
-             'id': site.id,
-             'nom': site.nom,
-             'latitude': site.latitude,
-             'longitude': site.longitude,
-             'localite': site.localite.localite if site.localite else "",
-             'operateur_nom': site.operateur.nom,
-             'operateur_logo': site.operateur.logo.url if site.operateur.logo else '/static/assets/img/brand/arcep.png',
-             'icon_color': icon_color,
+        sites_data.append({
+            'id': site.id,
+            'nom': site.nom,
+            'latitude': site.latitude,
+            'longitude': site.longitude,
+            'localite': site.localite.localite if site.localite else "",
+            'operateur_nom': site.operateur.nom,
+            'operateur_logo': site.operateur.logo.url if site.operateur.logo else '/static/assets/img/brand/arcep.png',
+            'icon_color': icon_color,
         })
 
-   
-#   # Vérifier si c'est une requête AJAX et retourner les données JSON
+    # Si requête AJAX, retourne les sites filtrés
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'sites': sites_data})
 
-    # Charger les options pour les filtres
-    departements_list = Departement.objects.all()
-    operateurs_list = Operateur.objects.all()
-
-    # Contexte pour la page
+    # Sinon, retourne tous les sites dans le contexte pour le chargement initial
     context = {
-        'departements': departements_list,
-        'operateurs': operateurs_list,
-        'sites': sites_data,
+        'departements': Departement.objects.all(),
+        'communes': Commune.objects.filter(departement_id__in=departements) if departements else [],
+        'operateurs': Operateur.objects.all(),
+        'sites': sites_data,  # Tous les sites pour le chargement initial
     }
+
     return render(request, 'home/map.html', context)
 
 @login_required(login_url='authentication:login')
