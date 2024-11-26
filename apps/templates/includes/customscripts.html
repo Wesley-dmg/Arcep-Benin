@@ -1,76 +1,70 @@
 <script>
-    $(document).ready(function () {
-      $('#id_departement').on('change', function () {
-        var departementId = $(this).val();
-        if (departementId) {
-          $.ajax({
-            url: "{% url 'home:get_communes' %}",
-            data: {
-              departement_id: departementId
-            },
-            success: function (data) {
-              var communeSelect = $('#id_commune');
-              communeSelect.empty();
-              communeSelect.append('<option value="">Sélectionner une commune</option>');
-              data.forEach(function (commune) {
-                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
-              });
-            }
-          });
-        } else {
-          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
-        }
-      });
+  $(document).ready(function () {
+    // Initialisation de Select2
+    $('.select2').select2({
+      placeholder: "Sélectionner",
+      allowClear: true // Permet de réinitialiser la sélection
     });
-  </script>
 
-  <script>
-    $(document).ready(function () {
-      $('#id_departement').on('change', function () {
-        var departementId = $(this).val();
-        if (departementId) {
-          $.ajax({
-            url: "{% url 'home:get_communes' %}",
-            data: {
-              departement_id: departementId
-            },
-            success: function (data) {
-              var communeSelect = $('#id_commune');
-              communeSelect.empty();
-              communeSelect.append('<option value="">Sélectionner une commune</option>');
-              data.forEach(function (commune) {
-                communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
-              });
-            }
-          });
-        } else {
-          $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
-        }
-      });
-    });
-  </script>
-
-  <script>
-    $(document).ready(function () {
-      $('#searchBar').on('input', function () {
-        var query = $(this).val()
+    // Gestion dynamique des communes en fonction des départements
+    $('#id_departement').on('change', function () {
+      var departementIds = $(this).val(); // Récupère les IDs sélectionnés (tableau)
+      if (departementIds && departementIds.length > 0) { // Si des départements sont sélectionnés
         $.ajax({
-          url: "{% url 'home:localite_create' %}",
+          url: "{% url 'home:get_communes' %}", // Vue Django pour récupérer les communes
           data: {
-            q: query
+            'departement_id[]': departementIds // Envoie les IDs au backend
           },
+          traditional: true, // Permet l'envoi correct de tableaux
           success: function (data) {
-            var localiteList = $('#localiteList')
-            localiteList.empty()
-            if (data.length > 0) {
-              data.forEach(function (item) {
-                localiteList.append('<li class="list-group-item d-flex justify-content-between align-items-center">' + '<div><strong>' + item.localite.toUpperCase() + '</strong> - ' + item.commune + ' - ' + item.departement + '</div>' + '<div>' + '<a href="/localite/update/' + item.id + '" class="btn btn-sm btn-ouprimary">Modifier</a> ' + '<a href="/localite/delete/' + item.id + '" class="btn btn-sm btn-oudanger">Supprimer</a>' + '</div></li>')
-              })
-            } else {
-              localiteList.append('<li class="list-group-item">Aucun résultat trouvé</li>')
-            }
+            var communeSelect = $('#id_commune'); // Sélecteur pour la liste des communes
+            communeSelect.empty(); // Vide la liste actuelle
+            communeSelect.append('<option value="">Sélectionner une commune</option>'); // Option par défaut
+            data.forEach(function (commune) { // Ajoute chaque commune reçue
+              communeSelect.append('<option value="' + commune.id + '">' + commune.nom + '</option>');
+            });
+            // Re-initialisation de Select2 pour que les nouvelles options soient prises en compte
+            communeSelect.trigger('change');
+          },
+          error: function () {
+            alert('Une erreur est survenue lors de la récupération des communes.');
           }
-        })
-      })
-    })
-  </script>
+        });
+      } else {
+        // Si aucun département n'est sélectionné, réinitialise la liste des communes
+        $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>');
+        $('#id_commune').trigger('change');
+      }
+    });
+
+    // Recherche dynamique dans la barre de recherche
+    $('#searchBar').on('input', function () {
+      var query = $(this).val(); // Texte saisi dans la barre de recherche
+      $.ajax({
+        url: "{% url 'home:localite_create' %}", // Vue Django pour la recherche
+        data: {
+          q: query // Envoie la requête de recherche
+        },
+        success: function (data) {
+          var localiteList = $('#localiteList'); // Conteneur pour les résultats
+          localiteList.empty(); // Vide les résultats actuels
+          if (data.length > 0) { // Si des résultats sont trouvés
+            data.forEach(function (item) {
+              localiteList.append(
+                '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                  '<div><strong>' + item.localite.toUpperCase() + '</strong> - ' + item.commune + ' - ' + item.departement + '</div>' +
+                  '<div>' +
+                    '<a href="/localite/update/' + item.id + '" class="btn btn-sm btn-ouprimary">Modifier</a> ' +
+                    '<a href="/localite/delete/' + item.id + '" class="btn btn-sm btn-oudanger">Supprimer</a>' +
+                  '</div>' +
+                '</li>'
+              );
+            });
+          } else { // Si aucun résultat trouvé
+            localiteList.append('<li class="list-group-item">Aucun résultat trouvé</li>');
+          }
+        }
+      });
+    });
+  });
+</script>

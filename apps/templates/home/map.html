@@ -61,33 +61,28 @@
             <button type="button" id="resetFilters" class="btn btn-secondary mt-3">Réinitialiser</button>
             
             <div class="form-group">
-                <label for="departement">Département</label>
-                <select id="departement" name="departement" class="form-control" multiple>
-                    <option value="">Tous</option>
+                <label for="id_departement">Département</label>
+                <select id="id_departement" name="departement" class="form-control select2" multiple>
+                    <option value="">Sélectionner un département</option>
                     {% for departement in departements %}
-                    <option value="{{ departement.id }}">{{ departement.nom }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-
-            
-            <div class="form-group ">
-                <label for="commune">Commune</label>
-                <select id="commune" name="commune" class="form-control" multiple>
-                    <option value="">Toutes</option>
-                    {% for commune in communes %}
-                    <option value="{{ commune.id }}">{{ commune.nom }}</option>
+                        <option value="{{ departement.id }}">{{ departement.nom }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="form-group">
+                <label for="id_commune">Commune</label>
+                <select id="id_commune" name="commune" class="form-control select2" multiple>
+                    <option value="">Sélectionner une commune</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="operateur">Opérateur</label>
-                <select id="operateur" name="operateur" class="form-control" multiple>
+                <select id="operateur" name="operateur" class="form-control select2" multiple>
                     <option value="">Tous</option>
                     {% for operateur in operateurs %}
-                    <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
+                        <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -133,6 +128,7 @@
 {% comment %} <script src="/static/assets/js/leaflet.js"></script> {% endcomment %}
 <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
     {% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
+  {% include 'includes/customscripts.html' %}
 
 <!-- Initialisation de la carte -->
 <script>

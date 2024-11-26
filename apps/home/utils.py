@@ -72,13 +72,17 @@ def get_statistics_data(request):
 
     return JsonResponse(data)
 
-@login_required(login_url='authentication:login')
+login_required(login_url='authentication:login')
 def get_communes(request):
-    departement_id = request.GET.get('departement_id')
-    if departement_id:
-        communes = Commune.objects.filter(departement_id=departement_id).values('id', 'nom')
+    """
+    Vue pour récupérer les communes en fonction des départements sélectionnés.
+    Si un ou plusieurs départements sont sélectionnés, retourne les communes correspondantes.
+    """
+    departement_ids = request.GET.getlist('departement_id[]')  # Récupère une liste d'IDs des départements
+    if departement_ids:  # Si au moins un département est sélectionné
+        communes = Commune.objects.filter(departement_id__in=departement_ids).values('id', 'nom')
         return JsonResponse(list(communes), safe=False)
-    return JsonResponse([], safe=False)
+    return JsonResponse([], safe=False)  # Retourne une liste vide si aucun département n'est sélectionné
 
 # Normalisation des noms de colonnes
 def normalize_column_name(col_name):
