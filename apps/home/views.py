@@ -99,6 +99,7 @@ def map_view(request):
 
     # Préparer les données des sites
     sites_data = []
+    
     for site in sites:
         if hasattr(site, 'conformite') and site.conformite is not None:
             site_conformite_statut = site.conformite.statut

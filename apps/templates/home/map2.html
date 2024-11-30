@@ -1,0 +1,337 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Cartographie des Sites {% endblock title %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+{% comment %} <link rel="stylesheet" href="/static/assets/css/leaflet.css" /> {% endcomment %}
+{% comment %} <link rel="stylesheet" href="/static/assets/css/FullScreen.css" /> {% endcomment %}
+<style>
+    .map-canvas {
+        height: 100vh;
+        width: 100%;
+    }
+    .custom-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .sidebar {
+        transition: right 0.3s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-3">
+                <div class="col-lg-6 col-7">
+                    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                            <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="#">Cartographie</a></li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-lg-6 col-5 text-right">
+                    <!-- Bouton pour afficher les filtres -->
+                    <button id="filterToggle" class="btn btn-sm btn-neutral"><i class="fas fa-filter"></i> Filtres</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar pour les filtres -->
+<div id="filterSidebar" class="sidebar bg-primary text-white border-right" style="width: 300px; height: 100vh; position: fixed; top: 0; right: -300px; overflow-y: auto; transition: 0.3s; z-index: 1000;">
+    <!-- Bouton de fermeture de la sidebar -->
+    <button id="closeSidebar" class="close-btn text-white" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px;">&times;</button>
+    <div class="p-4">
+        <h5 class="text-white" >Filtrer les sites</h5>
+        
+        <form id="filterForm">
+            <!-- Bouton de réinitialisation des filtres -->
+            <button type="button" id="resetFilters" class="btn btn-secondary mt-3">Réinitialiser</button>
+            
+            <div class="form-group">
+                <label for="id_departement">Département</label>
+                <select id="id_departement" name="departement" class="form-control select2" multiple>
+                    <option value="">Sélectionner un département</option>
+                    {% for departement in departements %}
+                        <option value="{{ departement.id }}">{{ departement.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="id_commune">Commune</label>
+                <select id="id_commune" name="commune" class="form-control select2" multiple>
+                    <option value="">Sélectionner une commune</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="id_operateur">Opérateur</label>
+                <select id="id_operateur" name="operateur" class="form-control select2" multiple>
+                    <option value="">Tous</option>
+                    {% for operateur in operateurs %}
+                        <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtre Conformité -->
+            <div class="form-group mt-4">
+                <label class="mb-2">Conformité</label>
+                <div id="conformiteContainer">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="conforme" name="conformite" value="conforme">
+                        <label class="form-check-label" for="conforme">Conforme</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="nonConforme" name="conformite" value="non-conforme">
+                        <label class="form-check-label" for="nonConforme">Non Conforme</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="sansConformite" name="conformite" value="sans-conformite">
+                        <label class="form-check-label" for="sansConformite">Sans Conformité</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Carte principale -->
+<div class="container-fluid mt--7 bg-light">
+    <div class="row">
+        <div class="col">
+            <div class="card border-0">
+                <div id="carteSite" class="map-canvas"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
+{% comment %} <script src="/static/assets/js/leaflet.js"></script> {% endcomment %}
+{% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
+{% include 'includes/customscripts.html' %}
+
+<!--initialisation de la carte -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapElement = document.getElementById('carteSite');
+        if (!mapElement) {
+            console.error("L'élément avec l'ID 'carteSite' n'existe pas.");
+            return;
+        }
+
+        // Initialisation de la carte
+        var map = L.map('carteSite').setView([9.3, 2.3], 7.48);
+
+        L.control.fullscreen({
+            position: 'topleft',
+            title: "Plein écran",
+            titleCancel: "Quitter le plein écran"
+        }).addTo(map);
+
+        // Ajouter une couche OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        window.map = map;
+    });
+</script>
+
+<!--Gestion des fichier gojson -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const layers = {};
+
+        function addGeoJsonLayer(url, styleOptions, layerName, addToMapByDefault = false) {
+            return fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const layer = L.geoJSON(data, {
+                        style: styleOptions,
+                        onEachFeature: function(feature, layer) {
+                            if (feature.properties) {
+                                const name = feature.properties.NOM || 'Inconnu';
+                                layer.bindPopup(`<strong>${name}</strong>`);
+                            }
+                        }
+                    });
+
+                    layers[layerName] = layer;
+
+                    if (addToMapByDefault) {
+                        layer.addTo(window.map);
+                    }
+                })
+                .catch(error => console.error(`Erreur lors du chargement de ${layerName} :`, error));
+        }
+
+        Promise.all([
+            addGeoJsonLayer('/static/geojson/BENIN_PAYS.json', { color: 'blue', weight: 2 }, 'Pays', true),
+            addGeoJsonLayer('/static/geojson/BENIN_DEPARTEMENT.json', { color: 'red', weight: 1 }, 'Départements'),
+            addGeoJsonLayer('/static/geojson/BENIN_COMMUNE.json', { color: 'green', weight: 1 }, 'Communes'),
+            addGeoJsonLayer('/static/geojson/BENIN_ARRONDISSEMENT.json', { color: 'yellow', weight: 1 }, 'Arrondissements')
+        ]).then(() => {
+            L.control.layers(null, layers, { position: 'topleft' }).addTo(window.map);
+        });
+    });
+</script>
+
+<!-- Script de gestion des filtres et de la carte -->
+<script>
+    $(document).ready(function() {
+        const map = window.map;
+        let markerLayer = L.layerGroup().addTo(map);
+        const bounds = [];
+
+        // Fonction pour charger les sites filtrés
+        function loadFilteredMarkers() {
+            // Récupération des IDs sélectionnés
+            const departements = $('#id_departement').val();
+            const communes = $('#id_commune').val();
+            const operateurs = $('#id_operateur').val();
+            const conformite = $('input[name="conformite"]:checked').map(function () { return this.value; }).get();
+
+            // Récupération des noms sélectionnés
+            const departementsNames = $('#id_departement').find("option:selected").map(function() { return this.text; }).get();
+            const communesNames = $('#id_commune').find("option:selected").map(function() { return this.text; }).get();
+            const operateursNames = $('#id_operateur').find("option:selected").map(function() { return this.text; }).get();
+
+            console.log("Filtres sélectionnés:");
+            console.log("Départements IDs:", departements, "Noms:", departementsNames);
+            console.log("Communes IDs:", communes, "Noms:", communesNames);
+            console.log("Opérateurs IDs:", operateurs, "Noms:", operateursNames);
+            console.log("Conformité:", conformite);
+
+            // Requête AJAX pour récupérer les sites filtrés
+            $.ajax({
+                url: "{% url 'home:map' %}",  // L'URL doit être correcte
+                data: {
+                    departement: departements,        // Envoi des départements sélectionnés
+                    departement_names: departementsNames,  // Envoi des noms de départements sélectionnés
+                    commune: communes,                // Envoi des communes sélectionnées
+                    commune_names: communesNames,    // Envoi des noms de communes sélectionnées
+                    operateur: operateurs,            // Envoi des opérateurs sélectionnés
+                    operateur_names: operateursNames, // Envoi des noms des opérateurs sélectionnés
+                    conformite: conformite,          // Envoi des valeurs de conformité sélectionnées
+                    format: 'json'
+                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(response) {
+                    console.log('Réponse reçue:', response.sites); // Debug
+
+                    // Supprimer les anciens marqueurs
+                    markerLayer.clearLayers();
+                    bounds.length = 0;
+
+                    // Ajouter les nouveaux marqueurs
+                    response.sites.forEach(site => {
+                        const icon = L.divIcon({
+                            html: `<i class="fas fa-map-marker-alt" style="color: ${site.icon_color}; font-size: 24px;"></i>`,
+                            className: 'custom-marker',
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 24]
+                        });
+
+                        const marker = L.marker([site.latitude, site.longitude], { icon: icon });
+                        marker.bindPopup(`
+                            <div>
+                                <img src="${site.operateur_logo}" alt="${site.operateur_nom}" style="width: 20px; height: auto;">
+                                <b>${site.nom}</b><br>
+                                ${site.localite}<br>
+                                <a href="/site/${site.id}" class="btn btn-sm">
+                                    <i class="fa fa-info-circle"></i>
+                                </a>
+                            </div>
+                        `);
+                        marker.addTo(markerLayer);
+
+                        bounds.push([site.latitude, site.longitude]);
+                    });
+
+                    // Ajuster la vue de la carte
+                    if (bounds.length > 0) {
+                        map.fitBounds(bounds, { padding: [20, 20] });
+                    }
+                },
+                error: function() {
+                    alert('Erreur lors du chargement des sites filtrés.');
+                }
+            });
+        }
+
+        // Événements des filtres
+        $('#id_departement, #id_commune, #id_operateur').on('change', loadFilteredMarkers);
+        $('input[name="conformite"]').on('change', loadFilteredMarkers);
+
+        // Charger les marqueurs initiaux (sans filtres)
+        loadFilteredMarkers();
+
+        // Réinitialiser les filtres au clic du bouton
+        $('#resetFilters').on('click', function () {
+            // Réinitialisation des départements, communes et opérateurs
+            $('#id_departement').val(null).trigger('change'); // Réinitialiser départements
+            $('#id_commune').empty().append('<option value="">Sélectionner une commune</option>').trigger('change'); // Réinitialiser communes
+            $('#id_operateur').val(null).trigger('change'); // Réinitialiser opérateurs
+
+            // Réinitialisation des cases de conformité
+            $('input[name="conformite"]').prop('checked', false);
+
+            // Rechargez les marqueurs sans filtres
+            loadFilteredMarkers();
+        });
+
+    });
+</script>
+
+<!--Sidebar script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterToggle = document.getElementById('filterToggle');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const sidebar = document.getElementById('filterSidebar');
+        const mapElement = document.getElementById('carteSite');
+
+        function toggleSidebar() {
+            if (sidebar.style.right === '-300px') {
+                sidebar.style.right = '-1px';
+                mapElement.style.marginRight = '300px';
+            } else {
+                sidebar.style.right = '-300px';
+                mapElement.style.marginRight = '0';
+            }
+            setTimeout(() => {
+                window.map.invalidateSize();
+            }, 300);
+        }
+
+        function closeSidebarHandler() {
+            sidebar.style.right = '-300px';
+            mapElement.style.marginRight = '0';
+            setTimeout(() => {
+                window.map.invalidateSize();
+            }, 300);
+        }
+
+        filterToggle.addEventListener('click', toggleSidebar);
+        closeSidebar.addEventListener('click', closeSidebarHandler);
+    });
+</script>
+{% endblock javascripts %}

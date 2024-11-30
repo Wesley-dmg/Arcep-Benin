@@ -334,18 +334,20 @@ def process_excel_file(uploaded_file):
     return errors
 
 def get_filtered_sites(departements=None, communes=None, operateurs=None, conformite=None):
+    
     """
-    Récupère les sites filtrés selon les critères spécifiés.
+        Récupère les sites filtrés selon les critères spécifiés.
 
-    Args:
-        departements (list): Liste des IDs de départements.
-        communes (list): Liste des IDs de communes.
-        operateurs (list): Liste des IDs d'opérateurs.
-        conformite (list): Liste des statuts de conformité (e.g., ['conforme', 'non-conforme', 'sans-rapport']).
+        Args:
+            departements (list): Liste des IDs de départements.
+            communes (list): Liste des IDs de communes.
+            operateurs (list): Liste des IDs d'opérateurs.
+            conformite (list): Liste des statuts de conformité (e.g., ['conforme', 'non-conforme', 'sans-rapport']).
 
-    Returns:
-        QuerySet: Les sites filtrés.
+        Returns:
+            QuerySet: Les sites filtrés.
     """
+    
     sites = Site.objects.select_related('operateur', 'localite', 'conformite').all()
 
     if departements:
