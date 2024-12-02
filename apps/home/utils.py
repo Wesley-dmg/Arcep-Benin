@@ -356,13 +356,16 @@ def get_filtered_sites(departements=None, communes=None, operateurs=None, confor
         sites = sites.filter(localite__commune_id__in=communes)
     if operateurs:
         sites = sites.filter(operateur_id__in=operateurs)
+    
     if conformite:
+        conformite_filters = Q()
         if 'conforme' in conformite:
-            sites = sites.filter(conformite__statut=True)
+            conformite_filters |= Q(conformite__statut=True)
         if 'non-conforme' in conformite:
-            sites = sites.filter(conformite__statut=False)
+            conformite_filters |= Q(conformite__statut=False)
         if 'sans-rapport' in conformite:
-            sites = sites.filter(conformite__isnull=True)
+            conformite_filters |= Q(conformite__isnull=True)
+        sites = sites.filter(conformite_filters)  # Appliquer la condition OR
 
     return sites
 

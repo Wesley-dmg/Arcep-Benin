@@ -6,10 +6,11 @@
 {% block stylesheets %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
 {% comment %} <link rel="stylesheet" href="/static/assets/css/leaflet.css" /> {% endcomment %}
 {% comment %} <link rel="stylesheet" href="/static/assets/css/FullScreen.css" /> {% endcomment %}
+
 <style>
     .map-canvas {
         height: 100vh;
@@ -50,7 +51,7 @@
 
 
 <!-- Full-height Sidebar for Filters -->
-<div id="filterSidebar" class="sidebar bg-primary text-white border-right" style="width: 300px; height: 100vh; position: fixed; top: 0px; right: -300px; overflow-y: auto; transition: 0.3s; z-index: 1000;">
+<div id="filterSidebar" class="sidebar bg-primary text-white border-right" style="width: 300px; height: 100vh; position: fixed; top: 150px; right: -300px; overflow-y: auto; transition: 0.3s; z-index: 1000;">
     <!-- Close "X" Button -->
     <button id="closeSidebar" class="close-btn text-white" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px;">&times;</button>
     <div class="p-4">
@@ -62,7 +63,7 @@
             
             <div class="form-group">
                 <label for="departement">Département</label>
-                <select id="departement" name="departement" class="form-control" multiple>
+                <select id="departement" name="departement" class="form-control select2" multiple>
                     <option value="">Tous</option>
                     {% for departement in departements %}
                     <option value="{{ departement.id }}">{{ departement.nom }}</option>
@@ -70,21 +71,9 @@
                 </select>
             </div>
 
-
-            
-            <div class="form-group ">
-                <label for="commune">Commune</label>
-                <select id="commune" name="commune" class="form-control" multiple>
-                    <option value="">Toutes</option>
-                    {% for commune in communes %}
-                    <option value="{{ commune.id }}">{{ commune.nom }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
             <div class="form-group">
                 <label for="operateur">Opérateur</label>
-                <select id="operateur" name="operateur" class="form-control" multiple>
+                <select id="operateur" name="operateur" class="form-control select2" multiple>
                     <option value="">Tous</option>
                     {% for operateur in operateurs %}
                     <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
@@ -106,7 +95,7 @@
                         <label class="form-check-label" for="nonConforme">Non Conforme</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="sansConformite" name="conformite" value="sans-conformite">
+                        <input class="form-check-input" type="checkbox" id="sansConformite" name="conformite" value="sans-rapport">
                         <label class="form-check-label" for="sansConformite">Sans Conformité</label>
                     </div>
                 </div>
@@ -129,10 +118,9 @@
 
 {% block javascripts %}
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 {% comment %} <script src="/static/assets/js/leaflet.js"></script> {% endcomment %}
 <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
-    {% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
+{% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
 
 <!-- Initialisation de la carte -->
 <script>
@@ -206,8 +194,8 @@
 <!-- Gestion des filtres -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        
         const departementFilter = document.getElementById('departement');
-        const communeFilter = document.getElementById('commune');
         const operateurFilter = document.getElementById('operateur');
         const conformiteFilters = document.querySelectorAll('input[name="conformite"]');
         const resetButton = document.getElementById('resetFilters');
@@ -216,28 +204,23 @@
         function applyFilters() {
             // Récupérer les départements sélectionnés (sous forme de tableau)
             const departement = Array.from(departementFilter.selectedOptions).map(option => option.value);
-            console.log('Departements:', departement);
+            //console.log('Departements:', departement);
             
-            // Récupérer les communes sélectionnées (sous forme de tableau)
-            const commune = Array.from(communeFilter.selectedOptions).map(option => option.value);
-            console.log('Communes:', commune);
-
             // Récupérer les opérateurs sélectionnés (sous forme de tableau)
             const operateur = Array.from(operateurFilter.selectedOptions).map(option => option.value);
-            console.log('Opérateurs:', operateur);
+            //console.log('Opérateurs:', operateur);
 
             // Récupérer les conformités sélectionnées
             let conformite = Array.from(conformiteFilters)
-                .filter(radio => radio.checked)
-                .map(radio => radio.value);
-            console.log('Conformité:', conformite);
-
+                .filter(checkbox => checkbox.checked) // Vérifie si la checkbox est cochée
+                .map(checkbox => checkbox.value); // Récupère la valeur de chaque checkbox cochée
+            //console.log('Conformité:', conformite);
+            
             // Construire l'URL avec les filtres
             const params = new URLSearchParams();
 
             // Ajouter les paramètres uniquement s'ils ne sont pas vides
             departement.forEach(dep => params.append('departement', dep)); // Ajouter plusieurs départements
-            commune.forEach(com => params.append('commune', com)); // Ajouter plusieurs communes
             operateur.forEach(op => params.append('operateur', op)); // Ajouter plusieurs opérateurs
             conformite.forEach(conform => params.append('conformite', conform)); // Ajouter plusieurs conformités
 
@@ -255,7 +238,7 @@
             .then(data => {
                 if (data && data.sites) {
                     // Filtrage manuel des données si nécessaire
-                    console.log(data);
+                    //console.log(data);
                     updateMap(data.sites);
                 } else {
                     alert("Erreur : Aucune donnée disponible.");
@@ -316,7 +299,6 @@
 
         // Ajouter les événements aux filtres
         departementFilter.addEventListener('change', applyFilters);
-        communeFilter.addEventListener('change', applyFilters);
         operateurFilter.addEventListener('change', applyFilters);
         conformiteFilters.forEach(radio => radio.addEventListener('change', applyFilters));
 
@@ -364,5 +346,4 @@
         closeSidebar.addEventListener('click', closeSidebarHandler);
     });
 </script>
-
 {% endblock javascripts %}
