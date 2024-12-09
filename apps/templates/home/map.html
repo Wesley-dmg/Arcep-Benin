@@ -7,10 +7,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-
 {% comment %} <link rel="stylesheet" href="/static/assets/css/leaflet.css" /> {% endcomment %}
 {% comment %} <link rel="stylesheet" href="/static/assets/css/FullScreen.css" /> {% endcomment %}
-
 <style>
     .map-canvas {
         height: 100vh;
@@ -51,7 +49,7 @@
 
 
 <!-- Full-height Sidebar for Filters -->
-<div id="filterSidebar" class="sidebar bg-primary text-white border-right" style="width: 300px; height: 100vh; position: fixed; top: 150px; right: -300px; overflow-y: auto; transition: 0.3s; z-index: 1000;">
+<div id="filterSidebar" class="sidebar bg-primary text-white border-right" style="width: 300px; height: 100vh; position: fixed; top: 0px; right: -300px; overflow-y: auto; transition: 0.3s; z-index: 1000;">
     <!-- Close "X" Button -->
     <button id="closeSidebar" class="close-btn text-white" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px;">&times;</button>
     <div class="p-4">
@@ -63,8 +61,7 @@
             
             <div class="form-group">
                 <label for="departement">Département</label>
-                <select id="departement" name="departement" class="form-control select2" multiple>
-                    <option value="">Tous</option>
+                <select id="departement" name="departement" class="form-control select2" data-placeholder="selectionnez Départements" multiple>
                     {% for departement in departements %}
                     <option value="{{ departement.id }}">{{ departement.nom }}</option>
                     {% endfor %}
@@ -72,9 +69,16 @@
             </div>
 
             <div class="form-group">
+                <label for="commune">Communes</label>
+                <select id="commune" name="commune" class="form-control select2" data-placeholder="selectionnez Communes" multiple >
+                    
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="operateur">Opérateur</label>
-                <select id="operateur" name="operateur" class="form-control select2" multiple>
-                    <option value="">Tous</option>
+                <select id="operateur" name="operateur" class="form-control select2" multiple data-placeholder="selectionnez operateurs">
+                    
                     {% for operateur in operateurs %}
                     <option value="{{ operateur.id }}">{{ operateur.nom }}</option>
                     {% endfor %}
@@ -121,6 +125,18 @@
 {% comment %} <script src="/static/assets/js/leaflet.js"></script> {% endcomment %}
 <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@1.6.0/Control.FullScreen.min.js"></script>
 {% comment %} <script src="/static/assets/js/FullScreen.min.js"></script> {% endcomment %}
+<!-- Initialisation de Select2 -->
+<script>
+$(document).ready(function() {
+    $('select.select2').each(function() {
+        const placeholder = $(this).data('placeholder') || 'Veuillez sélectionner une option'; // Valeur par défaut
+        $(this).select2({
+            placeholder: placeholder,
+            allowClear: true
+        });
+    });
+});
+</script>
 
 <!-- Initialisation de la carte -->
 <script>
@@ -150,168 +166,190 @@
     });
 </script>
 
-<!-- Gestion des fichiers GeoJSON -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const layers = {};
+document.addEventListener('DOMContentLoaded', function () {
+    const departementFilter = document.getElementById('departement');
+    const communeFilter = document.getElementById('commune');
 
-        function addGeoJsonLayer(url, styleOptions, layerName, addToMapByDefault = false) {
-            return fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const layer = L.geoJSON(data, {
-                        style: styleOptions,
-                        onEachFeature: function(feature, layer) {
-                            if (feature.properties) {
-                                const name = feature.properties.NOM || 'Inconnu';
-                                layer.bindPopup(`<strong>${name}</strong>`);
-                            }
-                        }
-                    });
-
-                    layers[layerName] = layer;
-
-                    // Ajouter à la carte si spécifié
-                    if (addToMapByDefault) {
-                        layer.addTo(window.map);
-                    }
-                })
-                .catch(error => console.error(`Erreur lors du chargement de ${layerName} :`, error));
+    // Fonction pour récupérer les communes dynamiquement
+    function fetchCommunes(departementIds) {
+        // Si aucun département n'est sélectionné, réinitialiser les communes
+        if (!Array.isArray(departementIds) || departementIds.length === 0) {
+            updateCommunes([]);
+            return;
         }
 
-        Promise.all([
-            addGeoJsonLayer('/static/geojson/BENIN_PAYS.json', { color: 'blue', weight: 3 }, 'Pays', true), // Active par défaut
-            addGeoJsonLayer('/static/geojson/BENIN_DEPARTEMENT.json', { color: 'red', weight: 1 }, 'Départements'),
-            addGeoJsonLayer('/static/geojson/BENIN_COMMUNE.json', { color: 'green', weight: 1 }, 'Communes'),
-            addGeoJsonLayer('/static/geojson/BENIN_ARRONDISSEMENT.json', { color: 'yellow', weight: 1 }, 'Arrondissements')
-        ]).then(() => {
-            // Ajouter le contrôle des couches une fois tout chargé
-            L.control.layers(null, layers, { position: 'topleft' }).addTo(window.map);
+        // Préparer les paramètres pour la requête AJAX
+        const params = new URLSearchParams();
+        departementIds.forEach(id => params.append('departement_id[]', id));
+
+        fetch(`/get_communes/?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Communes récupérées :', data); // Debug pour vérifier les données reçues
+            updateCommunes(data);
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des communes :', error);
+            alert('Une erreur est survenue lors de la récupération des communes.');
         });
+    }
+
+    // Fonction pour mettre à jour la liste des communes dans le sélecteur
+    function updateCommunes(communes) {
+        // Réinitialiser les options du sélecteur des communes
+        communeFilter.innerHTML = '<option value="">Tous</option>';
+        if (communes && communes.length > 0) {
+            communes.forEach(commune => {
+                const option = document.createElement('option');
+                option.value = commune.id;
+                option.textContent = commune.nom;
+                communeFilter.appendChild(option);
+            });
+        }
+
+        // Rafraîchir l'affichage de Select2
+        $('#commune').val(null).trigger('change'); // Réinitialiser la sélection
+        $('#commune').select2(); // Réactiver Select2
+    }
+
+    // Gestion de l'événement de changement sur le filtre département
+    $('#departement').on('change', function () {
+        const selectedDepartments = $('#departement').val() || [];
+        console.log('Départements sélectionnés :', selectedDepartments); // Debug
+        fetchCommunes(selectedDepartments);
     });
+});
 </script>
 
 <!-- Gestion des filtres -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        const departementFilter = document.getElementById('departement');
-        const operateurFilter = document.getElementById('operateur');
-        const conformiteFilters = document.querySelectorAll('input[name="conformite"]');
-        const resetButton = document.getElementById('resetFilters');
+document.addEventListener('DOMContentLoaded', function () {
+    // Sélection des éléments de filtre
+    const conformiteFilters = document.querySelectorAll('input[name="conformite"]');
+    const resetButton = document.getElementById('resetFilters');
 
-        // Fonction pour appliquer les filtres
-        function applyFilters() {
-            // Récupérer les départements sélectionnés (sous forme de tableau)
-            const departement = Array.from(departementFilter.selectedOptions).map(option => option.value);
-            //console.log('Departements:', departement);
-            
-            // Récupérer les opérateurs sélectionnés (sous forme de tableau)
-            const operateur = Array.from(operateurFilter.selectedOptions).map(option => option.value);
-            //console.log('Opérateurs:', operateur);
+    // Fonction pour appliquer les filtres
+    function applyFilters() {
+        const params = new URLSearchParams();
 
-            // Récupérer les conformités sélectionnées
-            let conformite = Array.from(conformiteFilters)
-                .filter(checkbox => checkbox.checked) // Vérifie si la checkbox est cochée
-                .map(checkbox => checkbox.value); // Récupère la valeur de chaque checkbox cochée
-            //console.log('Conformité:', conformite);
-            
-            // Construire l'URL avec les filtres
-            const params = new URLSearchParams();
+        // Récupération des valeurs de Select2
+        const departements = $('#departement').val() || [];
+        const communes = $('#commune').val() || [];
+        const operateurs = $('#operateur').val() || [];
 
-            // Ajouter les paramètres uniquement s'ils ne sont pas vides
-            departement.forEach(dep => params.append('departement', dep)); // Ajouter plusieurs départements
-            operateur.forEach(op => params.append('operateur', op)); // Ajouter plusieurs opérateurs
-            conformite.forEach(conform => params.append('conformite', conform)); // Ajouter plusieurs conformités
+        // Récupération des valeurs des cases à cocher
+        const conformites = Array.from(conformiteFilters)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
 
-            const url = `/map/?${params.toString()}`;
+        // Ajout des filtres aux paramètres de l'URL
+        departements.forEach(dep => params.append('departement', dep));
+        communes.forEach(commune => params.append('commune', commune));
+        operateurs.forEach(op => params.append('operateur', op));
+        conformites.forEach(conf => params.append('conformite', conf));
 
-            console.log('URL:', url);
+        const url = `/map/?${params.toString()}`;
 
-            // Envoi  de la requête AJAX
-            fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.sites) {
-                    // Filtrage manuel des données si nécessaire
-                    //console.log(data);
-                    updateMap(data.sites);
-                } else {
-                    alert("Erreur : Aucune donnée disponible.");
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                alert('Une erreur est survenue lors de la récupération des données.');
-            });
-        }
+        console.log('URL générée:', url);
 
-        // Fonction pour mettre à jour la carte avec les nouveaux sites
-        function updateMap(sites) {
-            const map = window.map; // Utiliser la carte globale
-
-            // Retirer les anciens marqueurs de la carte
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            const bounds = [];
-            sites.forEach(site => {
-                const latitude = parseFloat(site.latitude);
-                const longitude = parseFloat(site.longitude);
-
-                if (!isNaN(latitude) && !isNaN(longitude)) {
-                    bounds.push([latitude, longitude]);
-
-                    const icon = L.divIcon({
-                        html: `<i class="fas fa-map-marker-alt" style="color: ${site.icon_color}; font-size: 24px;"></i>`,
-                        className: 'custom-marker',
-                        iconSize: [24, 24],
-                        iconAnchor: [12, 24]
-                    });
-
-                    const marker = L.marker([latitude, longitude], { icon: icon });
-                    marker.bindPopup(`
-                        <div>
-                            <img src="/static/${site.operateur_logo}" alt="${site.operateur_nom}" style="width: 20px; height: auto;">
-                            <b>${site.nom}</b><br>
-                            ${site.localite}<br>
-                            <a href="/site/${site.id}" class="btn btn-sm">
-                                <i class="fa fa-info-circle"></i>
-                            </a>
-                        </div> 
-                    `);
-                    marker.addTo(map);
-                }
-            });
-
-            // Ajuster la vue de la carte en fonction des nouveaux sites
-            if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [20, 20] });
+        // Requête AJAX pour récupérer les données
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        } 
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.sites) {
+                console.log('Données reçues:', data);
+                updateMap(data.sites);
+            } else {
+                alert("Aucune donnée trouvée pour les filtres appliqués.");
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données:', error);
+            alert('Une erreur est survenue. Veuillez réessayer.');
+        });
+    }
 
-        // Ajouter les événements aux filtres
-        departementFilter.addEventListener('change', applyFilters);
-        operateurFilter.addEventListener('change', applyFilters);
-        conformiteFilters.forEach(radio => radio.addEventListener('change', applyFilters));
+    // Fonction pour mettre à jour la carte
+    function updateMap(sites) {
+        const map = window.map; // Utilise la carte globale
 
-        // Réinitialiser les filtres au clic du bouton
-        resetButton.addEventListener('click', function() {
-            document.getElementById('filterForm').reset();
-            applyFilters();
+        // Supprimer les anciens marqueurs
+        map.eachLayer(layer => {
+            if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                map.removeLayer(layer);
+            }
         });
 
-        // Appliquer les filtres au chargement de la page
+        const bounds = [];
+        sites.forEach(site => {
+            const latitude = parseFloat(site.latitude);
+            const longitude = parseFloat(site.longitude);
+
+            if (!isNaN(latitude) && !isNaN(longitude)) {
+                bounds.push([latitude, longitude]);
+
+                // Création de l'icône du marqueur
+                const icon = L.divIcon({
+                    html: `<i class="fas fa-map-marker-alt" style="color: ${site.icon_color}; font-size: 24px;"></i>`,
+                    className: 'custom-marker',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24]
+                });
+
+                // Création du marqueur avec popup
+                const marker = L.marker([latitude, longitude], { icon: icon });
+                marker.bindPopup(`
+                    <div>
+                        <img src="/static/${site.operateur_logo}" alt="${site.operateur_nom}" style="width: 20px; height: auto;">
+                        <b>${site.nom}</b><br>
+                        ${site.localite}<br>
+                        <a href="/site/${site.id}" class="btn btn-sm">
+                            <i class="fa fa-info-circle"></i>
+                        </a>
+                    </div> 
+                `);
+                marker.addTo(map);
+            }
+        });
+
+        // Ajuster la vue de la carte pour inclure tous les marqueurs
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    }
+
+    // Gestion des événements pour appliquer les filtres
+    $('#departement').on('change', applyFilters);
+    $('#commune').on('change', applyFilters);
+    $('#operateur').on('change', applyFilters);
+    conformiteFilters.forEach(checkbox => checkbox.addEventListener('change', applyFilters));
+
+    // Réinitialiser les filtres
+    resetButton.addEventListener('click', function () {
+        $('#filterForm')[0].reset();
+        $('#departement, #commune, #operateur').val(null).trigger('change');
         applyFilters();
     });
-</script>  
+
+    // Appliquer les filtres au chargement de la page
+    applyFilters();
+});
+</script>
 
 <!-- Gestion de la sidebar -->
 <script>
@@ -344,6 +382,128 @@
 
         filterToggle.addEventListener('click', toggleSidebar);
         closeSidebar.addEventListener('click', closeSidebarHandler);
+    });
+</script>
+
+<!-- Gestion des fichiers GeoJSON et des filtres -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const map = window.map; // Carte initialisée
+        const layers = {}; // Cache pour les couches chargées
+        const departementSelect = $('#departement'); // Utilisation de Select2
+        const activeLayers = {}; // Tableau associatif pour suivre les couches actives
+        let beninPaysLayer = null; // Référence à la couche BENIN_PAYS.json
+
+        // Fonction pour normaliser les noms (supprime accents, espaces, etc.)
+        function normalizeName(name) {
+            return name
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+                .toUpperCase() // Convertit en majuscules
+                .replace(/\s+/g, ""); // Supprime les espaces
+        }
+
+        // Fonction pour charger une couche GeoJSON
+        function loadGeoJsonLayer(url, styleOptions, onLoadCallback) {
+            console.log(`Chargement du fichier GeoJSON : ${url}`);
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erreur HTTP ${response.status} lors du chargement : ${url}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`Fichier GeoJSON chargé avec succès : ${url}`);
+                    const layer = L.geoJSON(data, {
+                        style: styleOptions,
+                        onEachFeature: function (feature, layer) {
+                            const name = feature.properties.NOM || 'Inconnu';
+                            layer.bindPopup(`<strong>${name}</strong>`);
+                        }
+                    });
+                    onLoadCallback(layer); // Appel au callback une fois la couche prête
+                })
+                .catch(error => console.error(`Erreur lors du chargement de ${url} :`, error));
+        }
+
+        // Fonction pour activer une couche GeoJSON
+        function activateLayer(url, styleOptions) {
+            // Vérifier si la couche est déjà dans le cache
+            if (layers[url]) {
+                console.log(`La couche ${url} est déjà en cache. Activation.`);
+                layers[url].addTo(map); // Ajouter la couche depuis le cache
+            } else {
+                console.log(`Chargement et activation de la couche : ${url}`);
+                loadGeoJsonLayer(url, styleOptions, function (layer) {
+                    layer.addTo(map);
+                    layers[url] = layer; // Ajouter la couche au cache
+                });
+            }
+        }
+
+        // Fonction pour supprimer une couche GeoJSON
+        function deactivateLayer(url) {
+            if (layers[url]) {
+                console.log(`Suppression de la couche : ${url}`);
+                map.removeLayer(layers[url]);
+                delete activeLayers[url]; // Supprimer des couches actives
+            }
+        }
+
+        // Fonction pour supprimer la couche BENIN_PAYS.json si elle est présente
+        function removeBeninPaysLayer() {
+            if (beninPaysLayer) {
+                console.log("Suppression de la couche BENIN_PAYS.json.");
+                map.removeLayer(beninPaysLayer); // Retirer la couche BENIN_PAYS
+                beninPaysLayer = null; // Réinitialiser la référence
+            }
+        }
+
+        // Fonction pour gérer les départements sélectionnés
+        departementSelect.on('change', function () {
+            const selectedDepartments = departementSelect.select2('data'); // Récupère les départements sélectionnés
+            console.log('Départements sélectionnés :', selectedDepartments);
+
+            // Créer un tableau des noms normalisés des départements actuellement sélectionnés
+            const selectedUrls = selectedDepartments.map(department => {
+                const departmentName = department.text; // Nom du département
+                const normalizedDepartment = normalizeName(departmentName); // Normaliser le nom
+                return `/static/geojson/${normalizedDepartment}.geojson`;
+            });
+
+            // Supprimer toutes les couches actives qui ne sont plus sélectionnées
+            Object.keys(activeLayers).forEach(url => {
+                if (!selectedUrls.includes(url)) {
+                    deactivateLayer(url); // Supprimer la couche de la carte
+                }
+            });
+
+            // Si aucun département n'est sélectionné, charger BENIN_PAYS.json
+            if (selectedUrls.length === 0) {
+                console.log("Aucun département sélectionné. Chargement de BENIN_PAYS.json.");
+                removeBeninPaysLayer(); // Supprimer BENIN_PAYS si elle était affichée
+                activateLayer('/static/geojson/BENIN_PAYS.json', { color: 'blue', weight: 2 }, function (layer) {
+                    beninPaysLayer = layer; // Stocker la référence à la couche BENIN_PAYS
+                });
+                return;
+            }
+
+            // Sinon, activer les couches pour les départements actuellement sélectionnés
+            removeBeninPaysLayer(); // Supprimer la couche BENIN_PAYS si elle était active
+            selectedUrls.forEach(url => {
+                if (!activeLayers[url]) {
+                    console.log(`Activation de la couche : ${url}`);
+                    activateLayer(url, { color: 'red', weight: 3 });
+                    activeLayers[url] = layers[url]; // Ajouter la couche aux actives
+                }
+            });
+        });
+
+        // Charger la couche par défaut (BENIN_PAYS.json) au chargement de la page
+        activateLayer('/static/geojson/BENIN_PAYS.json', { color: 'blue', weight: 2 }, function (layer) {
+            beninPaysLayer = layer; // Stocker la référence à la couche BENIN_PAYS
+        });
     });
 </script>
 {% endblock javascripts %}

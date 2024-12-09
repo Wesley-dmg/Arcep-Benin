@@ -7,7 +7,6 @@ from django.contrib import messages
 from datetime import datetime
 
 from django.shortcuts import render
-# from django.apps import apps
 from .models import *
 import pandas as pd
 import unicodedata
@@ -269,7 +268,8 @@ def process_excel_file(uploaded_file):
             try:
                 localite_instance = get_or_create_localite(row)
                 emplacement_instance = get_or_create_emplacement(row)
-                operateur_instance, _ = get_or_create_foreign_key(Operateur, 'nom', row.get('operateur'))
+                operateur_nom = row.get('operateur', '').strip().upper()  # Mise en majuscule du nom de l'opérateur
+                operateur_instance, _ = get_or_create_foreign_key(Operateur, 'nom', operateur_nom)
                 
                 latitude, longitude = validate_latitude_longitude(row.get('latitude_du_candidat'), row.get('longitude_du_candidat'))
 
@@ -365,10 +365,11 @@ def get_filtered_sites(departements=None, communes=None, operateurs=None, confor
             conformite_filters |= Q(conformite__statut=False)
         if 'sans-rapport' in conformite:
             conformite_filters |= Q(conformite__isnull=True)
-        sites = sites.filter(conformite_filters)  # Appliquer la condition OR
+        sites = sites.filter(conformite_filters) 
 
     return sites
 
+@login_required(login_url='authentication:login')
 def recherche_ajax(request):
     query = request.GET.get('q', '')
     resultats = []

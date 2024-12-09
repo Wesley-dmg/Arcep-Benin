@@ -149,35 +149,36 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-'''
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'WARNING',  # Niveau de log, ajustez selon vos besoins
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': 'django_production.log',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file', 'console'],
+            'level': 'WARNING',  # Ne log que les WARNING et plus sévères
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'ERROR',  # Log des erreurs de requêtes HTTP
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['file'],
+            'level': 'ERROR',  # Log des erreurs de sécurité
+            'propagate': False,
         },
     },
 }
-
-import logging
-
-# Configuration du logger
-logging.basicConfig(
-    filename='app.log',
-    filemode='a',
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG
-)
-logger = logging.getLogger()
-
-'''

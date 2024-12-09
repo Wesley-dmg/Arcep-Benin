@@ -94,69 +94,72 @@
             </div>
 
             <form method="POST" enctype="multipart/form-data" id="multiSectionForm">
-              {% csrf_token %}
+    {% csrf_token %}
 
-              <input type="hidden" name="site_id" value="{{ current_site.id }}">
+    <input type="hidden" name="site_id" value="{{ current_site.id }}">
 
-              <!-- Section 1 : Conformité -->
-              <div class="section active" id="section1">
-                
-                <div class="form-group">
-                  <label for="rapport">Rapport de conformité (PDF)</label>
-                  <input type="file" id="rapport" name="rapport" class="form-control" accept=".pdf" required>
-                </div>
+    <!-- Section 1 : Conformité -->
+    <div class="section active" id="section1">
+        <div class="form-group">
+            <label for="rapport">Rapport de conformité (PDF)</label>
+            <input type="file" id="rapport" name="rapport" class="form-control" accept=".pdf" {% if conformite and conformite.rapport %}required{% endif %}>
+        </div>
 
-                <div class="form-group">
-                  <label for="date_inspection">Date d'inspection</label>
-                  <input type="date" id="date_inspection" name="date_inspection" class="form-control" required value="{{ conformite.date_inspection|date:'Y-m-d' }}" />
-                </div>
+        <div class="form-group">
+            <label for="date_inspection">Date d'inspection</label>
+            <input type="date" id="date_inspection" name="date_inspection" class="form-control" 
+                   value="{{ conformite.date_inspection|date:'Y-m-d' }}" required />
+        </div>
 
-                <div class="form-group">
-                  <label for="statut">Statut</label><br>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="statut" id="conforme" value="conforme"  {% if conformite.statut == True %} checked {% endif %} required>
-                    <label class="form-check-label" for="conforme">Conforme</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="statut" id="non_conforme" value="non_conforme"  {% if conformite.statut == False %} checked {% endif %}  required>
-                    <label class="form-check-label" for="non_conforme">Non conforme</label>
-                  </div>
-                </div>
+        <div class="form-group">
+            <label for="statut">Statut</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="statut" id="conforme" value="conforme" 
+                       {% if conformite and conformite.statut %} checked {% endif %}>
+                <label class="form-check-label" for="conforme">Conforme</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="statut" id="non_conforme" value="non_conforme" 
+                       {% if conformite and not conformite.statut %} checked {% endif %}>
+                <label class="form-check-label" for="non_conforme">Non conforme</label>
+            </div>
+        </div>
 
-                <div class="form-buttons d-flex justify-content-between">
-                  <button type="button" class="btn btn-primary" onclick="nextSection()">Suivant</button>
-                </div>
-              </div>
+        <div class="form-buttons d-flex justify-content-between">
+            <button type="button" class="btn btn-primary" onclick="nextSection()">Suivant</button>
+        </div>
+    </div>
 
-              <!-- Section 2 : Informations sur le site -->
-              <div class="section" id="section2">
-               
-                <div class="form-group">
-                  <label for="ref_courrier">Référence de courrier</label>
-                  <input type="text" id="ref_courrier" name="ref_courrier" class="form-control" value="{{ ref_courrier|default_if_none:'' }}"  />
-                </div>
+    <!-- Section 2 : Informations sur le site -->
+    <div class="section" id="section2">
+        <div class="form-group">
+            <label for="ref_courrier">Référence de courrier</label>
+            <input type="text" id="ref_courrier" name="ref_courrier" class="form-control" 
+                   value="{{ current_site.ref_courrier|default_if_none:'' }}" />
+        </div>
 
-                <div class="form-group">
-                  <label for="observation">Observation</label>
-                  <textarea id="observation" name="observation" class="form-control">{{ observation|default_if_none:'' }}</textarea>
-                </div>
+        <div class="form-group">
+            <label for="observation">Observation</label>
+            <textarea id="observation" name="observation" class="form-control">{{ current_site.observation|default_if_none:'' }}</textarea>
+        </div>
 
-                <div class="form-group">
-                  <label for="avis_arcep">Avis ARCEP</label>
-                  <textarea id="avis_arcep" name="avis_arcep" class="form-control">{{ avis_arcep|default_if_none:'' }}</textarea>
-                </div>
+        <div class="form-group">
+            <label for="avis_arcep">Avis ARCEP</label>
+            <textarea id="avis_arcep" name="avis_arcep" class="form-control">{{ current_site.avis_arcep|default_if_none:'' }}</textarea>
+        </div>
 
-                <div class="form-group">
-                  <label for="date_autorisation">Date d'autorisation</label>
-                  <input type="date" id="date_autorisation" name="date_autorisation" class="form-control" value="{{ current_site.date_autorisation|date:'Y-m-d' }}" />
-                </div>
+        <div class="form-group">
+            <label for="date_autorisation">Date d'autorisation</label>
+            <input type="date" id="date_autorisation" name="date_autorisation" class="form-control" 
+                   value="{{ current_site.date_autorisation|date:'Y-m-d' }}" />
+        </div>
 
-                <div class="form-buttons d-flex justify-content-between">
-                  <button type="button" class="btn btn-secondary" onclick="prevSection()">Précédent</button>
-                  <button type="submit" class="btn btn-primary">Soumettre</button>
-                </div>
-              </div>
-            </form>
+        <div class="form-buttons d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" onclick="prevSection()">Précédent</button>
+            <button type="submit" class="btn btn-primary">Soumettre</button>
+        </div>
+    </div>
+</form>
           </div>
         </div>
       </div>

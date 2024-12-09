@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+from django.core.exceptions import ObjectDoesNotExist
 import json
 import os
 from django.shortcuts import get_object_or_404, redirect, render
@@ -89,7 +90,7 @@ def map_view(request):
     communes = [int(com) for com in request.GET.getlist('commune') if com.isdigit()]
     operateurs = [int(op) for op in request.GET.getlist('operateur') if op.isdigit()]
     conformite = request.GET.getlist('conformite')
-
+    
     # Si des filtres sont fournis, appliquez-les
     if departements or communes or operateurs or conformite:
         sites = get_filtered_sites(departements, communes, operateurs, conformite)
@@ -365,7 +366,6 @@ def commune_delete(request, pk):
     }
     return render(request, 'home/commune_delete_confirm.html', context)
 
-# Vues CRUD pour  Localite
 # Vues pour ajouter une Localite
 @login_required(login_url='authentication:login')
 def localite_create(request):
@@ -793,6 +793,13 @@ def technologie_delete(request, pk):
 @login_required(login_url='authentication:login')
 def add_conformite(request, site_id):
     current_site = get_object_or_404(Site, id=site_id)
+    conformite = None  # Initialisation de la conformité
+
+    try:
+        # Vérifier si une conformité existe pour ce site
+        conformite = Conformite.objects.get(site=current_site)
+    except ObjectDoesNotExist:
+        conformite = None
 
     if request.method == 'POST':
         try:
@@ -814,6 +821,7 @@ def add_conformite(request, site_id):
             except ValueError:
                 context = {
                     'current_site': current_site,
+                    'conformite': conformite,
                     'error': 'Le format de la date est incorrect. Le format attendu est AAAA-MM-JJ.'
                 }
                 return render(request, 'home/conformite_form.html', context)
@@ -825,27 +833,35 @@ def add_conformite(request, site_id):
             current_site.date_autorisation = date_autorisation
             current_site.save()
 
-            # Création de la conformité
-            Conformite.objects.create(
-                site=current_site,
-                rapport=rapport,
-                date_inspection=date_inspection,
-                statut=statut,
-            )
+            # Création ou mise à jour de la conformité
+            if conformite:
+                conformite.rapport = rapport if rapport else conformite.rapport
+                conformite.date_inspection = date_inspection
+                conformite.statut = statut
+                conformite.save()
+            else:
+                Conformite.objects.create(
+                    site=current_site,
+                    rapport=rapport,
+                    date_inspection=date_inspection,
+                    statut=statut,
+                )
 
             # Rediriger vers 'site_detail' en utilisant 'pk'
             return redirect('home:site_detail', pk=current_site.id)
 
         except Exception as e:
-            context={
+            context = {
                 'current_site': current_site,
+                'conformite': conformite,
                 'error': f"Erreur lors de l'enregistrement : {e}"
             }
             return render(request, 'home/conformite_form.html', context)
-    context={
+
+    context = {
         'current_site': current_site,
+        'conformite': conformite,
     }
-    # Cas d'affichage initial du formulaire
     return render(request, 'home/conformite_form.html', context)
 
 #Vue pour mettre a jour les rapports de conformité et les rapports d'analyse

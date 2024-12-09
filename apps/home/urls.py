@@ -11,20 +11,26 @@ handler500 = 'apps.home.views.custom_error_view'
 urlpatterns = [
     # index
     path('', views.index, name='home'),
-
+    
+    # File Upload URLs
+    path('file-upload/', views.file_upload_view, name='file_upload'),
+    
+    #Cartographie daes  sites   
+    path('map/', views.map_view, name='map'),
+    
     # Operateur URLs
     path('operateurs/', views.operateur_list, name='operateur_list'),
     path('operateur/create/', views.operateur_create, name='operateur_create'),
     path('operateur/<int:pk>/edit/', views.operateur_update, name='operateur_update'),    
     path('operateur/delete/<int:pk>/', views.operateur_delete, name='operateur_delete'),
 
-    # Localite URLs
-    path('get_communes/', views.get_communes, name='get_communes'),
+    # commune URLs
     path('communes/', views.commune_list, name='commune_list'),
     path('communes/create/', views.commune_create, name='commune_create'),
     path('communes/<int:pk>/update/', views.commune_update, name='commune_update'),
     path('communes/<int:pk>/delete/', views.commune_delete, name='commune_delete'),
 
+    # Localite URLs
     path('localite/create/', views.localite_create, name='localite_create'),
     path('localite/update/<int:pk>/', views.localite_update, name='localite_update'),
     path('localite/delete/<int:pk>/', views.localite_delete, name='localite_delete'),
@@ -54,11 +60,7 @@ urlpatterns = [
 
     path('statistics/', views.statistics, name='statistics'),
     path('statistics/data/', views.get_statistics_data, name='get_statistics_data'),     
-    
-    # File Upload URLs
-    path('file-upload/', views.file_upload_view, name='file_upload'),
-
-    #Cartographie daes  sites   
-    path('map/', views.map_view, name='map'),
+     
     path('ajax/recherche/', recherche_ajax, name='recherche_ajax'),
+    path('get_communes/', views.get_communes, name='get_communes'),
 ]

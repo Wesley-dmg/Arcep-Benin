@@ -38,7 +38,7 @@ class Departement(models.Model):
     
 class Commune(models.Model):
     """Modèle représentant une commune."""
-    nom = models.CharField(max_length=255, unique=True, verbose_name="Nom de la commune")
+    nom = models.CharField(max_length=255, verbose_name="Nom de la commune")
     departement = models.ForeignKey(Departement, on_delete=models.CASCADE, verbose_name="Département")
     
     def __str__(self):
@@ -66,7 +66,7 @@ class Technologie(models.Model):
     TECHNOLOGY_CHOICES = [
         ('2G', '2G'),
         ('3G', '3G'),
-        ('4G', '2G'),
+        ('4G', '4G'),
         ('5G', '5G'),
         
     ]

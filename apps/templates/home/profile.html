@@ -7,7 +7,7 @@
   <div class="card col-lg-6 col-md-8">
     <div class="card-body text-center">
       <div class="profile-header">
-        <img src="/static/assets/img/theme/team-4.jpg" class="rounded-circle mb-3" style="width: 150px; height: 150px;">
+        <img src="/static/assets/img/brand/profile.png" class="rounded-circle mb-3" style="width: 160px; height: 150px;">
         <h3 class="card-title">{{ request.user.username }}</h3>
         <p class="card-text">{{ request.user.email }}</p>
       </div>
@@ -46,7 +46,7 @@
             <label for="email">Email</label>
             <input type="email" class="form-control" id="email" name="email" value="{{ request.user.email }}">
           </div>
-          <div class="form-group">
+          <div class="form-group d-none">
             <label for="password">Changer le mot de passe</label>
             <input type="password" class="form-control" id="password" name="password">
           </div>
