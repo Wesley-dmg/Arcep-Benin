@@ -58,7 +58,6 @@
         <form id="filterForm">
             <!-- Bouton de réinitialisation des filtres -->
             <button type="button" id="resetFilters" class="btn btn-secondary mt-3">Réinitialiser</button>
-            
             <div class="form-group">
                 <label for="departement">Département</label>
                 <select id="departement" name="departement" class="form-control select2" data-placeholder="selectionnez Départements" multiple>
@@ -282,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Erreur lors de la récupération des données:', error);
             alert('Une erreur est survenue. Veuillez réessayer.');
         });
-    }
+      }
 
     // Fonction pour mettre à jour la carte
     function updateMap(sites) {
