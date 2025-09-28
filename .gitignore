@@ -1,35 +1,71 @@
-# Python
+# ===================== #
+#  Python
+# ===================== #
 __pycache__/
 *.py[cod]
-*.pyo
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
 
-# Environnements virtuels
-env/
-*venv*/*
-*.env
-
-# Fichiers de base de données
-# db.sqlite3
-
-# Fichiers de logs
+# ===================== #
+#  Django
+# ===================== #
 *.log
-
-# Dossiers de fichiers statiques
+*.pot
+*.pyc
+db.sqlite3
+media/
 staticfiles/
+*.db
+local_settings.py
 
-# Dossiers de migrations
-*/migrations/*.py
-*/migrations/__init__.py
+# Migrations compilées
+*/migrations/__pycache__/
+*/migrations/*.py[cod]
 
-# Fichiers temporaires
-*.tmp
-*.bak
+# ===================== #
+#  Environnements
+# ===================== #
+.env
+*.env
+venv/
+arcep_venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Fichiers de configuration de l'IDE
-.idea/
+# ===================== #
+#  IDE / Editeurs
+# ===================== #
 .vscode/
+.idea/
+*.sublime-project
 *.sublime-workspace
 
-# Exclure les fichiers de dépendances
-*.egg-info/
-*.egg
+# ===================== #
+#  OS files
+# ===================== #
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===================== #
+#  Tests / Coverage
+# ===================== #
+.coverage
+*.cover
+*.py,cover
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.cache/
