@@ -9,9 +9,12 @@ pillow==10.4.0
 pandas==2.2.3
 openpyxl==3.1.5
 pypdf2==3.0.1
+psycopg2-binary==2.9.10
+dj-database-url==3.0.1 
 django-jazzmin==3.0.0
 backports.tarfile==1.2.0
 importlib-metadata==8.0.0
 importlib-resources==6.4.0
 jaraco.collections==5.1.0
 tomli==2.0.1
+
