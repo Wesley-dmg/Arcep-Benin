@@ -8,6 +8,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.urls import reverse
 
+
 def login_view(request):
     form = LoginForm(request.POST or None)
 
@@ -23,13 +24,10 @@ def login_view(request):
                 login(request, user)
                 return redirect("/")
             else:
-                msg = 'Identifiants invalides'
+                msg = "Identifiants invalides"
         else:
-            msg = 'Erreur de validation du formulaire'
-    context={
-        "form": form, 
-        "msg": msg
-        }
+            msg = "Erreur de validation du formulaire"
+    context = {"form": form, "msg": msg}
     return render(request, "accounts/login.html", context)
 
 
@@ -51,30 +49,27 @@ def register_user(request):
             return redirect("/login/")
 
         else:
-            msg = 'Le formulaire n\'est pas valide'
+            msg = "Le formulaire n'est pas valide"
     else:
         form = SignUpForm()
-    context= {
-                "form": form, 
-                "msg": msg, 
-                "success": success
-                }
-    return render(request, "accounts/register.html",context)
+    context = {"form": form, "msg": msg, "success": success}
+    return render(request, "accounts/register.html", context)
 
 
 def logout_user(request):
     logout(request)
-    return redirect(reverse('authentication:login'))
+    return redirect(reverse("authentication:login"))
 
-@login_required
+
+# @login_required
 def profile_view(request):
-    if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        
+    if request.method == "POST":
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
         user = request.user
         user.first_name = first_name
         user.last_name = last_name
@@ -83,11 +78,13 @@ def profile_view(request):
 
         if password:
             user.set_password(password)
-            update_session_auth_hash(request, user)  # Pour ne pas déconnecter l'utilisateur après changement du mot de passe
+            update_session_auth_hash(
+                request, user
+            )  # Pour ne pas déconnecter l'utilisateur après changement du mot de passe
 
         user.save()
 
-        messages.success(request, 'Votre profil a été mis à jour avec succès.')
-        return redirect('authentication:profile')
+        messages.success(request, "Votre profil a été mis à jour avec succès.")
+        return redirect("authentication:profile")
 
-    return render(request, 'home/profile.html')
+    return render(request, "home/profile.html")

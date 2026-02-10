@@ -2,14 +2,13 @@
 import os
 from decouple import config
 from dotenv import load_dotenv
-from unipath import Path
 import dj_database_url
 
 load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = Path(__file__).parent
-CORE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CORE_DIR = BASE_DIR
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="S#perS3crEt_1122")
@@ -58,11 +57,13 @@ STATIC_ROOT = os.path.join(CORE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 
 # Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (os.path.join(CORE_DIR, "apps/static"),)
+STATICFILES_DIRS = [
+    os.path.join(CORE_DIR, "static"),
+]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "apps/static/media")
+MEDIA_ROOT = os.path.join(CORE_DIR, "static/media")
 
 TEMPLATE_DIR = os.path.join(CORE_DIR, "apps/templates")  # ROOT dir for templates
 
@@ -86,18 +87,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-# DATABASE_URL = os.getenv("DATABASE_URL")
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "OPTIONS": {
+            "timeout": 20,
+        },
+    }
 }
 
-# Password validation
+# Alternative avec PostgreSQL pour production (décommentez si besoin)
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=config("DATABASE_URL", default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"),
+#         conn_max_age=600,
+#     )
+# }
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -125,9 +133,8 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+# Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 
 LOGGING = {
     "version": 1,
@@ -143,3 +150,8 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+# Pour l'internationalisation (si vous utilisez makemessages)
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, "locale"),
+]
